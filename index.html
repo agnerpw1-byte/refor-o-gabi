@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professora Gabriela — Reforço Escolar · Santa Fé, PR</title>
+<meta name="description" content="Aulas de reforço particular em Matemática, Língua Portuguesa e Coordenação Motora Fina. Ensino fundamental, Santa Fé, Paraná.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
+    query, orderBy, where, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyDZ6px5hNxseYV1ZmCbiuo8cK3tSMmnu1k",
+    authDomain:        "reforco-gabi.firebaseapp.com",
+    projectId:         "reforco-gabi",
+    storageBucket:     "reforco-gabi.firebasestorage.app",
+    messagingSenderId: "276918902606",
+    appId:             "1:276918902606:web:e65a85c6380729f037881f",
+    measurementId:     "G-4RTTDME525"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // Email da professora cadastrado no Firebase Auth
+  const EMAIL_PROF = "gabriela@email.com";
+
+  // Expõe para o código global
+  window._fb = { auth, db, signInWithEmailAndPassword, signOut,
+    onAuthStateChanged, collection, addDoc, getDocs, doc, updateDoc,
+    query, orderBy, where, serverTimestamp, EMAIL_PROF };
+
+  // Observa autenticação ao carregar
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      if (user.email === EMAIL_PROF) {
+        go("prof"); carregarAgenda(); carregarSolicitacoes();
+      } else {
+        go("aluno"); carregarAulasAluno(user.uid); carregarMateriaisAluno(user.uid);
+      }
+    }
+  });
+</script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --ink:#1a1a18;--ink2:#3d3d38;--ink3:#7a7a72;
+  --paper:#faf9f5;--paper2:#f2f0e8;--paper3:#e8e4d4;
+  --gold:#b8973a;--gold2:#d4b05a;--gold-light:#f5edcf;
+  --sage:#4a6b52;--sage-light:#e8f0e9;
+  --red:#c0392b;--red-light:#fdf0ee;
+  --coral:#c0562b;--coral-light:#fdf2ee;
+  --serif:'Cormorant Garamond',serif;
+  --sans:'Outfit',sans-serif;
+  --tr:0.22s cubic-bezier(.4,0,.2,1);
+}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:900px;margin:0 auto;}
+
+/* ── NAV ── */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem;height:58px;background:var(--paper);border-bottom:1px solid var(--paper3);position:sticky;top:0;z-index:30;}
+.logo{font-family:var(--serif);font-size:20px;font-weight:400;letter-spacing:.04em;color:var(--ink);display:flex;align-items:baseline;gap:6px;cursor:pointer;}
+.logo-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);margin-bottom:3px;}
+.logo small{font-family:var(--sans);font-size:11px;font-weight:300;color:var(--ink3);letter-spacing:.12em;text-transform:uppercase;}
+.nav-r{display:flex;align-items:center;gap:4px;}
+.nb{font-size:12px;font-weight:300;color:var(--ink3);letter-spacing:.04em;padding:6px 13px;border-radius:4px;border:none;background:transparent;cursor:pointer;transition:color var(--tr),background var(--tr);font-family:var(--sans);}
+.nb:hover{color:var(--ink);background:var(--paper2);}
+.nb.cta{background:var(--ink);color:var(--paper);font-weight:400;padding:7px 16px;margin-left:4px;}
+.nb.cta:hover{background:var(--ink2);}
+
+/* ── PAGES ── */
+.pg{display:none;}
+.pg.on{display:block;animation:fi .28s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ── HERO ── */
+.hero{padding:3.5rem 1.75rem 2.5rem;display:grid;grid-template-columns:1fr 310px;gap:2.5rem;align-items:start;border-bottom:1px solid var(--paper3);}
+.hero-ey{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;}
+.ey-line{width:28px;height:1px;background:var(--gold);}
+.ey-txt{font-size:11px;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);}
+.hero h1{font-family:var(--serif);font-size:46px;font-weight:300;line-height:1.1;margin-bottom:1.25rem;letter-spacing:-.01em;}
+.hero h1 em{font-style:italic;color:var(--sage);}
+.hero-lead{font-size:14px;font-weight:300;line-height:1.8;color:var(--ink2);margin-bottom:1.75rem;}
+.hero-actions{display:flex;gap:10px;}
+.btn{font-family:var(--sans);font-size:13px;font-weight:400;padding:9px 22px;border-radius:3px;cursor:pointer;letter-spacing:.06em;transition:all var(--tr);border:none;}
+.btn-dark{background:var(--ink);color:var(--paper);}
+.btn-dark:hover{background:var(--ink2);}
+.btn-out{background:transparent;color:var(--ink);border:1px solid var(--paper3);}
+.btn-out:hover{border-color:var(--ink3);}
+.hero-panel{display:flex;flex-direction:column;gap:10px;}
+.hpc{background:var(--paper2);border:1px solid var(--paper3);border-radius:6px;padding:1.15rem;}
+.hpc.dark{background:var(--ink);border-color:var(--ink);}
+.hpc-num{font-family:var(--serif);font-size:32px;font-weight:300;color:var(--ink);line-height:1;}
+.hpc.dark .hpc-num{color:var(--gold2);}
+.hpc-lbl{font-size:11px;font-weight:300;color:var(--ink3);margin-top:3px;letter-spacing:.06em;}
+.hpc.dark .hpc-lbl{color:rgba(250,249,245,.45);}
+.hpc-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ── SEÇÕES ── */
+.sec{padding:2.75rem 1.75rem;border-bottom:1px solid var(--paper3);}
+.sec-ey{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:400;margin-bottom:.6rem;display:block;}
+.sec-t{font-family:var(--serif);font-size:32px;font-weight:300;line-height:1.15;color:var(--ink);}
+.sec-sub{font-size:13px;font-weight:300;color:var(--ink3);margin-top:.4rem;line-height:1.6;margin-bottom:2rem;}
+
+/* ── MATÉRIAS ── */
+.mat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--paper3);border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.mat-item{background:var(--paper);padding:1.6rem 1.4rem;transition:background var(--tr);}
+.mat-item:hover{background:var(--paper2);}
+.mat-num{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:400;margin-bottom:.75rem;}
+.mat-nome{font-family:var(--serif);font-size:20px;font-weight:400;margin-bottom:.65rem;line-height:1.25;}
+.mat-desc{font-size:12px;font-weight:300;color:var(--ink3);line-height:1.7;}
+.mat-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:.9rem;}
+.mat-tag{font-size:10px;font-weight:400;letter-spacing:.08em;background:var(--paper2);border:1px solid var(--paper3);padding:2px 8px;border-radius:2px;color:var(--ink3);}
+.mat-icon{font-size:22px;margin-bottom:.75rem;}
+
+/* ── TRABALHOS ── */
+.trab-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--paper3);border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.trab-card{background:var(--paper);padding:1.4rem;transition:background var(--tr);}
+.trab-card:hover{background:var(--paper2);}
+.trab-mat{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:400;margin-bottom:.65rem;}
+.trab-t{font-family:var(--serif);font-size:17px;font-weight:400;line-height:1.25;margin-bottom:.55rem;}
+.trab-d{font-size:12px;font-weight:300;color:var(--ink3);line-height:1.65;}
+.trab-tag{display:inline-block;font-size:10px;font-weight:400;letter-spacing:.08em;background:var(--paper2);border:1px solid var(--paper3);padding:2px 8px;border-radius:2px;color:var(--ink3);margin-top:.65rem;}
+
+/* ── METODOLOGIA ── */
+.metodo-list{display:flex;flex-direction:column;}
+.metodo-item{display:flex;gap:2rem;padding:1.4rem 0;border-bottom:1px solid var(--paper3);align-items:flex-start;}
+.metodo-item:last-child{border-bottom:none;}
+.metodo-n{font-family:var(--serif);font-size:34px;font-weight:300;color:var(--paper3);line-height:1;min-width:46px;margin-top:2px;}
+.metodo-body h4{font-family:var(--serif);font-size:17px;font-weight:400;margin-bottom:5px;}
+.metodo-body p{font-size:13px;font-weight:300;color:var(--ink3);line-height:1.7;}
+
+/* ── CALENDÁRIO ── */
+.agenda-wrap{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;}
+.cal-box{background:var(--paper2);border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.25rem;border-bottom:1px solid var(--paper3);}
+.cal-nav{background:transparent;border:none;cursor:pointer;color:var(--ink3);font-size:16px;padding:4px 8px;border-radius:3px;transition:background var(--tr);}
+.cal-nav:hover{background:var(--paper3);}
+.cal-mes{font-family:var(--serif);font-size:16px;font-weight:400;}
+.cal-grid-wrap{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;}
+.cal-dow{font-size:10px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:.55rem 0;}
+.cal-day{font-size:13px;font-weight:300;padding:.52rem 0;cursor:pointer;transition:background var(--tr),color var(--tr);border-radius:3px;margin:1px;}
+.cal-day:hover:not(.vazio):not(.passado){background:var(--paper3);}
+.cal-day.selecionado{background:var(--ink)!important;color:var(--paper)!important;}
+.cal-day.hoje{color:var(--gold);font-weight:500;}
+.cal-day.tem-vaga::after{content:'·';display:block;color:var(--sage);font-size:10px;margin-top:-4px;}
+.cal-day.vazio,.cal-day.passado{cursor:default;color:var(--paper3);}
+.hor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.hor-btn{font-family:var(--sans);font-size:12px;font-weight:400;padding:8px 4px;text-align:center;border-radius:3px;background:var(--paper2);border:1px solid var(--paper3);cursor:pointer;transition:all var(--tr);color:var(--ink2);}
+.hor-btn:hover{border-color:var(--sage);color:var(--sage);}
+.hor-btn.sel{background:var(--sage);border-color:var(--sage);color:#fff;}
+.hor-btn.ocupado{background:var(--paper3);color:var(--paper3);cursor:default;border-color:var(--paper3);}
+.hor-placeholder{font-size:13px;font-weight:300;color:var(--ink3);padding:1.25rem;background:var(--paper2);border-radius:6px;text-align:center;}
+.hor-titulo{font-family:var(--serif);font-size:16px;font-weight:400;margin-bottom:.2rem;}
+.hor-sub{font-size:12px;font-weight:300;color:var(--ink3);margin-bottom:1rem;}
+.ag-form{background:var(--paper2);border:1px solid var(--paper3);border-radius:8px;padding:1.15rem;margin-top:12px;}
+.ag-form-t{font-family:var(--serif);font-size:15px;font-weight:400;margin-bottom:.85rem;}
+.resumo-ag{background:var(--gold-light);border:1px solid var(--gold2);border-radius:4px;padding:.8rem 1rem;margin-bottom:12px;font-size:12px;font-weight:300;color:var(--ink2);display:none;}
+.resumo-ag strong{font-weight:500;display:block;font-size:13px;margin-bottom:3px;}
+
+/* ── FORMULÁRIOS ── */
+.ff{margin-bottom:11px;}
+.ff label{display:block;font-size:10px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px;}
+.ff input,.ff select,.ff textarea{width:100%;padding:9px 12px;background:var(--paper);border:1px solid var(--paper3);border-radius:3px;font-size:13px;font-weight:300;font-family:var(--sans);color:var(--ink);transition:border-color var(--tr);}
+.ff input:focus,.ff select:focus,.ff textarea:focus{outline:none;border-color:var(--gold);}
+.ff2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.msg-erro{font-size:12px;color:var(--red);margin-top:6px;display:none;}
+.msg-ok{font-size:12px;color:var(--sage);margin-top:6px;display:none;}
+
+/* ── LOGIN ── */
+.login-escolha{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:560px;margin:2rem auto;}
+.lc{background:var(--paper2);border:1px solid var(--paper3);border-radius:8px;padding:1.75rem;text-align:center;cursor:pointer;transition:border-color var(--tr),background var(--tr);}
+.lc:hover{border-color:var(--gold);background:var(--gold-light);}
+.lc-icon{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto .7rem;}
+.lc-titulo{font-family:var(--serif);font-size:19px;font-weight:400;margin-bottom:.35rem;}
+.lc-sub{font-size:12px;font-weight:300;color:var(--ink3);}
+.login-form-wrap{max-width:360px;margin:0 auto;padding:1.25rem 0;}
+.login-form-wrap h2{font-family:var(--serif);font-size:24px;font-weight:300;text-align:center;margin-bottom:.3rem;}
+.login-form-wrap p{font-size:12px;font-weight:300;color:var(--ink3);text-align:center;margin-bottom:1.25rem;}
+.back-btn{background:transparent;border:none;color:var(--ink3);font-size:12px;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;gap:5px;margin-bottom:1rem;padding:0;transition:color var(--tr);}
+.back-btn:hover{color:var(--ink);}
+
+/* ── ÁREA ALUNO ── */
+.aluno-dash{padding:1.5rem 1.75rem 2.5rem;}
+.dash-topo{display:flex;align-items:center;justify-content:space-between;background:var(--ink);border-radius:8px;padding:1.2rem 1.5rem;margin-bottom:1.2rem;}
+.dt-nome{font-family:var(--serif);font-size:18px;font-weight:300;color:var(--paper);margin-bottom:3px;}
+.dt-meta{font-size:11px;font-weight:300;color:rgba(250,249,245,.4);letter-spacing:.06em;}
+.dt-logout{font-size:11px;font-weight:400;color:rgba(250,249,245,.5);background:transparent;border:1px solid rgba(250,249,245,.15);border-radius:3px;padding:5px 12px;cursor:pointer;font-family:var(--sans);transition:all var(--tr);}
+.dt-logout:hover{color:var(--paper);border-color:rgba(250,249,245,.4);}
+.aluno-cols{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.dash-bloco{background:var(--paper2);border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.db-head{padding:.85rem 1.25rem;border-bottom:1px solid var(--paper3);display:flex;align-items:center;gap:10px;}
+.db-head i{font-size:16px;color:var(--gold);}
+.db-head h4{font-family:var(--serif);font-size:15px;font-weight:400;}
+.db-body{padding:.5rem 1.25rem 1rem;}
+.ag-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--paper3);}
+.ag-item:last-child{border-bottom:none;}
+.ag-cal{min-width:42px;text-align:center;background:var(--paper);border:1px solid var(--paper3);border-radius:4px;padding:4px;}
+.ag-dia{font-family:var(--serif);font-size:19px;font-weight:400;line-height:1;color:var(--ink);}
+.ag-mes{font-size:10px;font-weight:400;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-top:2px;}
+.ag-info h5{font-size:12px;font-weight:400;margin-bottom:2px;}
+.ag-info span{font-size:11px;font-weight:300;color:var(--ink3);}
+.ag-st{margin-left:auto;font-size:10px;font-weight:400;letter-spacing:.06em;padding:3px 9px;border-radius:2px;white-space:nowrap;}
+.st-ok{background:var(--sage-light);color:var(--sage);}
+.st-pend{background:var(--gold-light);color:#7a5c10;}
+.mat-dl{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--paper3);cursor:pointer;text-decoration:none;}
+.mat-dl:last-child{border-bottom:none;}
+.mat-dl:hover .mdl-nome{color:var(--gold);}
+.mdl-ico{width:34px;height:34px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.im{background:#eeecf8;color:#534AB7;}.ip{background:var(--gold-light);color:#8a6020;}.icm{background:var(--coral-light);color:var(--coral);}
+.mdl-nome{font-size:12px;font-weight:400;color:var(--ink);transition:color var(--tr);}
+.mdl-meta{font-size:11px;font-weight:300;color:var(--ink3);margin-top:2px;}
+.mdl-dl{margin-left:auto;font-size:14px;color:var(--ink3);transition:color var(--tr);}
+.mat-dl:hover .mdl-dl{color:var(--gold);}
+.empty-state{font-size:13px;font-weight:300;color:var(--ink3);padding:.75rem 0;text-align:center;}
+
+/* ── PAINEL PROF ── */
+.prof-dash{padding:1.5rem 1.75rem 2.5rem;}
+.prof-header{display:flex;align-items:center;justify-content:space-between;background:var(--ink);border-radius:8px;padding:1.2rem 1.5rem;margin-bottom:1.2rem;}
+.ph-esq h3{font-family:var(--serif);font-size:18px;font-weight:300;color:var(--paper);margin-bottom:3px;}
+.ph-esq p{font-size:11px;font-weight:300;color:rgba(250,249,245,.4);letter-spacing:.06em;}
+.ph-btns{display:flex;gap:8px;}
+.ph-btn{font-size:11px;font-weight:400;letter-spacing:.06em;padding:6px 14px;border-radius:3px;cursor:pointer;border:none;font-family:var(--sans);transition:all var(--tr);}
+.ph-btn.ghost{background:rgba(250,249,245,.08);color:rgba(250,249,245,.6);border:1px solid rgba(250,249,245,.15);}
+.ph-btn.ghost:hover{color:var(--paper);border-color:rgba(250,249,245,.4);}
+.prof-tabs{display:flex;gap:0;border-bottom:1px solid var(--paper3);margin-bottom:1.25rem;}
+.ptab{font-size:13px;font-weight:300;color:var(--ink3);padding:.7rem 1.2rem;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:color var(--tr),border-color var(--tr);font-family:var(--sans);margin-bottom:-1px;}
+.ptab:hover{color:var(--ink);}
+.ptab.on{color:var(--ink);border-bottom-color:var(--gold);font-weight:400;}
+.tab-pane{display:none;}
+.tab-pane.on{display:block;}
+.badge-novo{background:var(--red);color:#fff;font-size:9px;font-weight:500;padding:1px 5px;border-radius:10px;margin-left:5px;vertical-align:top;}
+
+/* agenda prof */
+.prof-ag-cols{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.semana-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+.sem-dia{background:var(--paper);border:1px solid var(--paper3);border-radius:4px;padding:.55rem .45rem;text-align:center;}
+.sem-dia-nome{font-size:10px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.35rem;}
+.sem-dia-num{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);margin-bottom:.45rem;}
+.sem-aula{font-size:10px;font-weight:400;padding:2px 5px;border-radius:2px;margin-bottom:3px;text-align:left;}
+.sa-mat{background:#eeecf8;color:#534AB7;}
+.sa-port{background:var(--gold-light);color:#8a6020;}
+.sa-coord{background:var(--coral-light);color:var(--coral);}
+.sem-dia.hoje-d{border-color:var(--gold);}
+.ag-solicitacoes{background:var(--paper2);border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.sol-item{display:flex;align-items:flex-start;gap:12px;padding:1rem 1.25rem;border-bottom:1px solid var(--paper3);transition:opacity .3s;}
+.sol-item:last-child{border-bottom:none;}
+.sol-avatar{width:36px;height:36px;background:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:14px;color:var(--gold2);flex-shrink:0;}
+.sol-info{flex:1;}
+.sol-nome{font-size:13px;font-weight:500;margin-bottom:2px;}
+.sol-detalhe{font-size:12px;font-weight:300;color:var(--ink3);line-height:1.5;}
+.sol-btns{display:flex;gap:6px;margin-top:8px;}
+.sb{font-size:11px;font-weight:400;padding:4px 11px;border-radius:2px;border:none;cursor:pointer;font-family:var(--sans);transition:all var(--tr);}
+.sb.ok{background:var(--sage-light);color:var(--sage);}
+.sb.ok:hover{background:var(--sage);color:#fff;}
+.sb.no{background:var(--red-light);color:var(--red);}
+.sb.no:hover{background:var(--red);color:#fff;}
+
+/* ── IA ── */
+.ia-box{background:var(--paper2);border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.ia-form{padding:1.4rem;}
+.ia-form-t{font-family:var(--serif);font-size:20px;font-weight:400;margin-bottom:.25rem;}
+.ia-form-s{font-size:12px;font-weight:300;color:var(--ink3);margin-bottom:1.25rem;line-height:1.6;}
+.ia-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.ia-result{border-top:1px solid var(--paper3);padding:1.4rem;}
+.ia-result-t{font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.85rem;display:flex;align-items:center;gap:8px;}
+.ia-result-t::after{content:'';flex:1;height:1px;background:var(--paper3);}
+.ia-content{font-size:13px;font-weight:300;color:var(--ink2);line-height:1.8;white-space:pre-wrap;}
+.ia-loading{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:300;color:var(--ink3);padding:.5rem 0;}
+.ia-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1.2s ease-in-out infinite;}
+.ia-dot:nth-child(2){animation-delay:.2s;}
+.ia-dot:nth-child(3){animation-delay:.4s;}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+.ia-actions{display:flex;gap:8px;margin-top:1.1rem;}
+
+/* ── FOOTER ── */
+.footer{padding:1.25rem 1.75rem;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--paper3);}
+.footer-logo{font-family:var(--serif);font-size:16px;font-weight:300;color:var(--ink2);}
+.footer-info{font-size:11px;font-weight:300;color:var(--ink3);text-align:right;}
+
+@media(max-width:640px){
+  .hero{grid-template-columns:1fr;}
+  .hero-panel{display:none;}
+  .mat-grid,.trab-grid{grid-template-columns:1fr;}
+  .agenda-wrap,.aluno-cols,.prof-ag-cols,.semana-grid{grid-template-columns:1fr;}
+  .nav-r .nb:not(.cta){display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="logo" onclick="go('home')">
+    <span>Professora Gabriela</span>
+    <div class="logo-dot"></div>
+    <small>Santa Fé · PR</small>
+  </div>
+  <div class="nav-r">
+    <button class="nb" onclick="go('home')">Início</button>
+    <button class="nb" onclick="go('trabalho')">Trabalhos</button>
+    <button class="nb" onclick="go('agendar')">Agendar aula</button>
+    <button class="nb cta" onclick="go('login')"><i class="ti ti-user"></i> Entrar</button>
+  </div>
+</nav>
+
+<!-- ══ HOME ══ -->
+<div class="pg on" id="pg-home">
+  <div class="hero">
+    <div>
+      <div class="hero-ey"><div class="ey-line"></div><span class="ey-txt">Reforço escolar · Ensino fundamental · Santa Fé, PR</span></div>
+      <h1>Aprendizado <em>personalizado</em><br>para cada aluno</h1>
+      <p class="hero-lead">Aulas individuais de Matemática, Língua Portuguesa e Coordenação Motora Fina. Metodologia lúdica — com brincadeiras, atividades práticas e muito cuidado com cada criança.</p>
+      <div class="hero-actions">
+        <button class="btn btn-dark" onclick="go('agendar')">Agendar aula gratuita</button>
+        <button class="btn btn-out" onclick="go('trabalho')">Ver trabalhos</button>
+      </div>
+    </div>
+    <div class="hero-panel">
+      <div class="hpc-row">
+        <div class="hpc"><div class="hpc-num">+5</div><div class="hpc-lbl">Anos de experiência</div></div>
+        <div class="hpc dark"><div class="hpc-num">3</div><div class="hpc-lbl">Especialidades</div></div>
+      </div>
+      <div class="hpc"><div class="hpc-num">100%</div><div class="hpc-lbl">Individual — sem turmas, sem pressa</div></div>
+      <div class="hpc" style="background:var(--gold-light);border-color:var(--gold2);">
+        <div style="font-size:11px;font-weight:300;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Primeira aula</div>
+        <div style="font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);">Gratuita e sem compromisso</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <span class="sec-ey">Especialidades</span>
+    <h2 class="sec-t">As três matérias que a Gabriela ensina</h2>
+    <p class="sec-sub">Cada atendimento é individual, adaptado ao ritmo e às necessidades de cada aluno.</p>
+    <div class="mat-grid">
+      <div class="mat-item">
+        <div class="mat-icon">🔢</div>
+        <div class="mat-num">01 · Exatas</div>
+        <div class="mat-nome">Matemática</div>
+        <p class="mat-desc">Frações, geometria, problemas e raciocínio lógico. Atividades práticas e lúdicas para tornar a matemática concreta e divertida.</p>
+        <div class="mat-tags"><span class="mat-tag">Frações</span><span class="mat-tag">Geometria</span><span class="mat-tag">Problemas</span><span class="mat-tag">Jogos</span></div>
+      </div>
+      <div class="mat-item">
+        <div class="mat-icon">📖</div>
+        <div class="mat-num">02 · Linguagens</div>
+        <div class="mat-nome">Língua Portuguesa</div>
+        <p class="mat-desc">Leitura, interpretação, gramática e produção de texto. Aulas que estimulam o gosto pela leitura e a confiança na escrita.</p>
+        <div class="mat-tags"><span class="mat-tag">Leitura</span><span class="mat-tag">Gramática</span><span class="mat-tag">Redação</span><span class="mat-tag">Interpretação</span></div>
+      </div>
+      <div class="mat-item">
+        <div class="mat-icon">✋</div>
+        <div class="mat-num">03 · Desenvolvimento</div>
+        <div class="mat-nome">Coordenação Motora Fina</div>
+        <p class="mat-desc">Atividades manuais, recorte, colagem, grafismo e escrita. Desenvolvimento essencial para a aprendizagem escolar com muita criatividade.</p>
+        <div class="mat-tags"><span class="mat-tag">Grafismo</span><span class="mat-tag">Recorte</span><span class="mat-tag">Escrita</span><span class="mat-tag">Criatividade</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec" style="border-bottom:none;">
+    <span class="sec-ey">Como funciona</span>
+    <h2 class="sec-t">Lúdico, prático e personalizado</h2>
+    <p class="sec-sub">Brincadeiras e atividades práticas fazem parte do método — não são extra.</p>
+    <div class="metodo-list">
+      <div class="metodo-item"><div class="metodo-n">01</div><div class="metodo-body"><h4>Diagnóstico individual</h4><p>Identifico onde cada aluno tem dificuldade antes de começar — sem perder tempo com o que ele já sabe.</p></div></div>
+      <div class="metodo-item"><div class="metodo-n">02</div><div class="metodo-body"><h4>Aulas com brincadeiras e atividades práticas</h4><p>Uso jogos, dinâmicas e materiais concretos. O lúdico é parte central do aprendizado, não um bônus.</p></div></div>
+      <div class="metodo-item"><div class="metodo-n">03</div><div class="metodo-body"><h4>Ritmo do aluno, não do conteúdo</h4><p>Cada criança tem seu tempo. O plano de aula é montado para ela — não para uma turma.</p></div></div>
+      <div class="metodo-item"><div class="metodo-n">04</div><div class="metodo-body"><h4>Retorno contínuo à família</h4><p>Comunico a evolução do aluno regularmente — para que pais e responsáveis acompanhem de perto.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TRABALHOS ══ -->
+<div class="pg" id="pg-trabalho">
+  <div class="sec" style="border-bottom:none;">
+    <span class="sec-ey">Portfólio</span>
+    <h2 class="sec-t">Trabalhos e materiais</h2>
+    <p class="sec-sub">Exemplos de planos de aula, atividades lúdicas e materiais usados com os alunos.</p>
+    <div class="trab-grid">
+      <div class="trab-card"><div class="trab-mat">Matemática · 6.º ano</div><div class="trab-t">Frações com material concreto</div><p class="trab-d">Aula usando partes de laranja e pizza de papel para ensinar frações de forma visual e tátil.</p><span class="trab-tag">Atividade lúdica</span></div>
+      <div class="trab-card"><div class="trab-mat">Língua Portuguesa · 5.º ano</div><div class="trab-t">Produção de texto com imagens</div><p class="trab-d">Sequência de imagens para estimular a narrativa escrita — do rascunho à versão final revisada.</p><span class="trab-tag">Plano de aula</span></div>
+      <div class="trab-card"><div class="trab-mat">Coord. Motora · 3.º ano</div><div class="trab-t">Labirinto e grafismo livre</div><p class="trab-d">Atividade de labirinto progressivo e grafismo ornamental para desenvolver controle do lápis.</p><span class="trab-tag">Atividade prática</span></div>
+      <div class="trab-card"><div class="trab-mat">Matemática · 4.º ano</div><div class="trab-t">Tabuada com jogo de cartas</div><p class="trab-d">Jogo de memória com operações matemáticas para fixar a tabuada de forma divertida.</p><span class="trab-tag">Jogo pedagógico</span></div>
+      <div class="trab-card"><div class="trab-mat">Língua Portuguesa · 7.º ano</div><div class="trab-t">Análise de manchetes de jornal</div><p class="trab-d">Leitura crítica de manchetes para trabalhar interpretação, variação linguística e argumentação.</p><span class="trab-tag">Plano de aula</span></div>
+      <div class="trab-card"><div class="trab-mat">Coord. Motora · 2.º ano</div><div class="trab-t">Recorte e colagem temática</div><p class="trab-d">Atividade de recorte com tesoura de ponta arredondada e colagem para desenvolver precisão.</p><span class="trab-tag">Atividade manual</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AGENDAR ══ -->
+<div class="pg" id="pg-agendar">
+  <div class="sec" style="border-bottom:none;">
+    <span class="sec-ey">Agendamento</span>
+    <h2 class="sec-t">Escolha seu horário</h2>
+    <p class="sec-sub">Selecione o dia e o horário. A professora confirma em até 2 horas pelo WhatsApp.</p>
+    <div class="agenda-wrap">
+      <div>
+        <div class="cal-box">
+          <div class="cal-header">
+            <button class="cal-nav" onclick="mudarMes(-1)">‹</button>
+            <span class="cal-mes" id="cal-titulo"></span>
+            <button class="cal-nav" onclick="mudarMes(1)">›</button>
+          </div>
+          <div class="cal-grid-wrap" id="cal-grid"></div>
+        </div>
+        <p style="font-size:11px;font-weight:300;color:var(--ink3);margin-top:.5rem;padding-left:.5rem;"><span style="color:var(--sage);">·</span> dias com horários disponíveis</p>
+      </div>
+      <div>
+        <div class="hor-titulo" id="hor-titulo">Selecione um dia</div>
+        <div class="hor-sub" id="hor-sub">Clique em uma data disponível no calendário</div>
+        <div id="hor-grid-wrap"><div class="hor-placeholder"><i class="ti ti-calendar"></i><br><br>Escolha uma data para ver os horários</div></div>
+        <div class="ag-form" id="ag-form" style="display:none;">
+          <div class="ag-form-t">Confirmar solicitação</div>
+          <div class="resumo-ag" id="resumo-ag"></div>
+          <div class="ff2">
+            <div class="ff"><label>Nome do aluno</label><input type="text" id="ag-nome" placeholder="Nome completo"></div>
+            <div class="ff"><label>Série</label><input type="text" id="ag-serie" placeholder="Ex: 5.º ano"></div>
+          </div>
+          <div class="ff2">
+            <div class="ff"><label>WhatsApp</label><input type="text" id="ag-wpp" placeholder="(44) 9 "></div>
+            <div class="ff"><label>Matéria</label>
+              <select id="ag-mat">
+                <option value="">Selecione</option>
+                <option>Matemática</option>
+                <option>Língua Portuguesa</option>
+                <option>Coordenação Motora Fina</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-dark" style="width:100%;margin-top:4px;" onclick="enviarSolicitacao()">Enviar solicitação</button>
+          <p class="msg-erro" id="ag-erro">Preencha todos os campos para continuar.</p>
+          <p class="msg-ok" id="ag-ok">Solicitação enviada! A professora confirmará em até 2 horas pelo WhatsApp.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div class="pg" id="pg-login">
+  <div style="padding:2.5rem 1.75rem;">
+    <div id="login-escolha-view">
+      <div style="text-align:center;margin-bottom:2rem;">
+        <span class="sec-ey" style="display:block;text-align:center;">Portal</span>
+        <h2 style="font-family:var(--serif);font-size:28px;font-weight:300;">Como deseja entrar?</h2>
+      </div>
+      <div class="login-escolha">
+        <div class="lc" onclick="showLogin('aluno')">
+          <div class="lc-icon" style="background:var(--paper3);"><i class="ti ti-school" style="font-size:20px;color:var(--ink3);"></i></div>
+          <div class="lc-titulo">Sou aluno</div>
+          <p class="lc-sub">Agenda e materiais de estudo</p>
+        </div>
+        <div class="lc" onclick="showLogin('prof')">
+          <div class="lc-icon" style="background:var(--gold-light);"><i class="ti ti-crown" style="font-size:20px;color:var(--gold);"></i></div>
+          <div class="lc-titulo">Sou a professora</div>
+          <p class="lc-sub">Agenda, IA e gerenciamento</p>
+        </div>
+      </div>
+    </div>
+    <div id="login-aluno-view" style="display:none;">
+      <div class="login-form-wrap">
+        <button class="back-btn" onclick="backLogin()"><i class="ti ti-arrow-left"></i> Voltar</button>
+        <h2>Área do aluno</h2>
+        <p>Acesse sua agenda e materiais</p>
+        <div class="ff"><label>E-mail</label><input type="email" id="al-u" placeholder="seu@email.com"></div>
+        <div class="ff"><label>Senha</label><input type="password" id="al-p" placeholder="Sua senha"></div>
+        <button class="btn btn-dark" style="width:100%;margin-top:8px;" onclick="loginAluno()">Entrar</button>
+        <p class="msg-erro" id="aluno-erro" style="text-align:center;margin-top:8px;"></p>
+        <p style="text-align:center;font-size:12px;font-weight:300;color:var(--ink3);margin-top:1rem;">Sem acesso? <a href="#" onclick="go('agendar')" style="color:var(--gold);text-decoration:none;">Agende uma aula primeiro</a></p>
+      </div>
+    </div>
+    <div id="login-prof-view" style="display:none;">
+      <div class="login-form-wrap">
+        <button class="back-btn" onclick="backLogin()"><i class="ti ti-arrow-left"></i> Voltar</button>
+        <h2>Painel da professora</h2>
+        <p>Acesso exclusivo — Gabriela</p>
+        <div class="ff"><label>E-mail</label><input type="email" id="pr-u" placeholder="gabriela@email.com"></div>
+        <div class="ff"><label>Senha</label><input type="password" id="pr-p" placeholder="Sua senha"></div>
+        <button class="btn btn-dark" style="width:100%;margin-top:8px;" onclick="loginProf()">Entrar</button>
+        <p class="msg-erro" id="prof-erro" style="text-align:center;margin-top:8px;"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ÁREA DO ALUNO ══ -->
+<div class="pg" id="pg-aluno">
+  <div class="aluno-dash">
+    <div class="dash-topo">
+      <div><div class="dt-nome" id="aluno-nome-dash">Olá!</div><div class="dt-meta" id="aluno-meta-dash">Área do aluno</div></div>
+      <button class="dt-logout" onclick="logout()"><i class="ti ti-logout"></i> Sair</button>
+    </div>
+    <div class="aluno-cols">
+      <div class="dash-bloco">
+        <div class="db-head"><i class="ti ti-calendar-event"></i><h4>Próximas aulas</h4></div>
+        <div class="db-body" id="aluno-aulas"><div class="empty-state">Carregando...</div></div>
+      </div>
+      <div class="dash-bloco">
+        <div class="db-head"><i class="ti ti-files"></i><h4>Materiais de estudo</h4></div>
+        <div class="db-body" id="aluno-materiais"><div class="empty-state">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAINEL PROFESSORA ══ -->
+<div class="pg" id="pg-prof">
+  <div class="prof-dash">
+    <div class="prof-header">
+      <div class="ph-esq"><h3>Painel da professora</h3><p id="prof-data-header">Gabriela · Santa Fé, PR</p></div>
+      <div class="ph-btns">
+        <button class="ph-btn ghost" onclick="logout()"><i class="ti ti-logout"></i> Sair</button>
+      </div>
+    </div>
+    <div class="prof-tabs">
+      <button class="ptab on" onclick="trocarTab('agenda',this)">Agenda <span class="badge-novo" id="badge-solicitacoes">0</span></button>
+      <button class="ptab" onclick="trocarTab('ia',this)">✦ Gerar plano com IA</button>
+      <button class="ptab" onclick="trocarTab('alunos',this)">Alunos</button>
+    </div>
+
+    <!-- TAB AGENDA -->
+    <div class="tab-pane on" id="tab-agenda">
+      <div class="prof-ag-cols">
+        <div>
+          <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.75rem;">Esta semana</p>
+          <div class="semana-grid" id="semana-grid">
+            <div class="empty-state" style="grid-column:span 6;">Carregando...</div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.75rem;">Solicitações pendentes <span class="badge-novo" id="badge-sol2">0</span></p>
+          <div class="ag-solicitacoes" id="lista-solicitacoes">
+            <div class="empty-state" style="padding:1rem;">Nenhuma solicitação pendente</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB IA -->
+    <div class="tab-pane" id="tab-ia">
+      <div class="ia-box">
+        <div class="ia-form">
+          <div class="ia-form-t">Gerar plano de aula completo</div>
+          <div class="ia-form-s">A IA gera um plano detalhado com atividades lúdicas, brincadeiras e dinâmicas — do jeito que a Gabriela trabalha.</div>
+          <div class="ia-grid">
+            <div class="ff"><label>Matéria</label>
+              <select id="ia-mat">
+                <option value="">Selecione</option>
+                <option>Matemática</option>
+                <option>Língua Portuguesa</option>
+                <option>Coordenação Motora Fina</option>
+              </select>
+            </div>
+            <div class="ff"><label>Série / Ano</label>
+              <select id="ia-serie">
+                <option value="">Selecione</option>
+                <option>1.º ano</option><option>2.º ano</option><option>3.º ano</option>
+                <option>4.º ano</option><option>5.º ano</option><option>6.º ano</option>
+                <option>7.º ano</option><option>8.º ano</option><option>9.º ano</option>
+              </select>
+            </div>
+          </div>
+          <div class="ff"><label>Conteúdo / Tema da aula</label><input type="text" id="ia-tema" placeholder="Ex: Frações, Produção textual, Grafismo ornamental..."></div>
+          <div class="ia-grid">
+            <div class="ff"><label>Duração</label>
+              <select id="ia-dur"><option>1 hora</option><option>1h30</option><option>2 horas</option></select>
+            </div>
+            <div class="ff"><label>Nível do aluno</label>
+              <select id="ia-dif"><option>Iniciante</option><option>Intermediário</option><option>Avançado</option></select>
+            </div>
+          </div>
+          <div class="ff"><label>Observações sobre o aluno (opcional)</label><input type="text" id="ia-obs" placeholder="Ex: tem dificuldade em segurar o lápis, gosta de histórias de animais..."></div>
+          <button class="btn btn-dark" onclick="gerarPlano()"><i class="ti ti-sparkles"></i> Gerar plano de aula</button>
+        </div>
+        <div class="ia-result" id="ia-result" style="display:none;">
+          <div class="ia-result-t">Plano gerado</div>
+          <div id="ia-content-wrap"></div>
+          <div class="ia-actions" id="ia-actions" style="display:none;">
+            <button class="btn btn-dark" onclick="copiarPlano()"><i class="ti ti-copy"></i> Copiar plano</button>
+            <button class="btn btn-out" onclick="novoPlano()"><i class="ti ti-refresh"></i> Gerar outro</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB ALUNOS -->
+    <div class="tab-pane" id="tab-alunos">
+      <div style="background:var(--paper2);border:1px solid var(--paper3);border-radius:8px;overflow:hidden;">
+        <div class="db-head"><i class="ti ti-users"></i><h4>Alunos cadastrados</h4></div>
+        <div style="padding:.5rem 1.25rem 1rem;" id="lista-alunos">
+          <div class="empty-state">Carregando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-logo">Professora Gabriela</div>
+  <div class="footer-info">Reforço escolar particular<br>Santa Fé, Paraná</div>
+</footer>
+
+<script>
+// ══ NAVEGAÇÃO ══
+function go(p){
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  const el=document.getElementById('pg-'+p);
+  if(el) el.classList.add('on');
+}
+
+// ══ CALENDÁRIO ══
+let calAno=new Date().getFullYear(), calMes=new Date().getMonth(), diaSel=null, horSel=null;
+const diasComVaga=[2,4,5,9,11,12,16,18,19,23,25,26];
+const horariosBase=['13h00','14h00','14h30','15h00','16h00','17h00','18h00'];
+const horariosOcupados={'2':['14h00'],'4':['13h00','15h00'],'9':['14h30','16h00'],'16':['13h00','17h00']};
+const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const dows=['D','S','T','Q','Q','S','S'];
+
+function renderCal(){
+  document.getElementById('cal-titulo').textContent=meses[calMes]+' '+calAno;
+  const grid=document.getElementById('cal-grid');
+  let h='';
+  dows.forEach(d=>{h+=`<div class="cal-dow">${d}</div>`;});
+  const prim=new Date(calAno,calMes,1).getDay();
+  const total=new Date(calAno,calMes+1,0).getDate();
+  const hoje=new Date();
+  for(let i=0;i<prim;i++) h+=`<div class="cal-day vazio"></div>`;
+  for(let d=1;d<=total;d++){
+    const past=new Date(calAno,calMes,d)<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
+    const temV=diasComVaga.includes(d);
+    const isH=d===hoje.getDate()&&calMes===hoje.getMonth()&&calAno===hoje.getFullYear();
+    let cls='cal-day'+(past?' passado':temV?' tem-vaga':'')+(isH?' hoje':'')+(d===diaSel?' selecionado':'');
+    const clk=(!past&&temV)?`onclick="selecionarDia(${d})"`:'' ;
+    h+=`<div class="${cls}" ${clk}>${d}</div>`;
+  }
+  grid.innerHTML=h;
+}
+
+function selecionarDia(d){
+  diaSel=d; horSel=null; renderCal();
+  const nd=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  document.getElementById('hor-titulo').textContent=nd[new Date(calAno,calMes,d).getDay()]+', '+d+' de '+meses[calMes];
+  document.getElementById('hor-sub').textContent='Horários disponíveis — selecione um:';
+  const ocup=(horariosOcupados[String(d)]||[]);
+  let h='<div class="hor-grid">';
+  horariosBase.forEach(hor=>{
+    const isO=ocup.includes(hor);
+    h+=`<button class="hor-btn${isO?' ocupado':''}" ${isO?'disabled':''} onclick="selecionarHor('${hor}')">${hor}</button>`;
+  });
+  document.getElementById('hor-grid-wrap').innerHTML=h+'</div>';
+  document.getElementById('ag-form').style.display='none';
+  document.getElementById('resumo-ag').style.display='none';
+  document.getElementById('ag-ok').style.display='none';
+  document.getElementById('ag-erro').style.display='none';
+}
+
+function selecionarHor(h){
+  horSel=h;
+  document.querySelectorAll('.hor-btn').forEach(b=>b.classList.toggle('sel',b.textContent===h));
+  const r=document.getElementById('resumo-ag');
+  r.innerHTML=`<strong>Resumo</strong>${diaSel} de ${meses[calMes]} de ${calAno} · ${h} · 1 hora`;
+  r.style.display='block';
+  document.getElementById('ag-form').style.display='block';
+}
+
+function mudarMes(d){
+  calMes+=d;
+  if(calMes>11){calMes=0;calAno++;}
+  if(calMes<0){calMes=11;calAno--;}
+  diaSel=null; horSel=null; renderCal();
+  document.getElementById('hor-titulo').textContent='Selecione um dia';
+  document.getElementById('hor-sub').textContent='Clique em uma data disponível no calendário';
+  document.getElementById('hor-grid-wrap').innerHTML='<div class="hor-placeholder"><i class="ti ti-calendar"></i><br><br>Escolha uma data para ver os horários</div>';
+  document.getElementById('ag-form').style.display='none';
+}
+
+async function enviarSolicitacao(){
+  const nome=document.getElementById('ag-nome').value.trim();
+  const serie=document.getElementById('ag-serie').value.trim();
+  const wpp=document.getElementById('ag-wpp').value.trim();
+  const mat=document.getElementById('ag-mat').value;
+  const erro=document.getElementById('ag-erro');
+  const ok=document.getElementById('ag-ok');
+  if(!nome||!serie||!wpp||!mat||!diaSel||!horSel){
+    erro.textContent='Preencha todos os campos e selecione dia e horário.';
+    erro.style.display='block'; ok.style.display='none'; return;
+  }
+  erro.style.display='none';
+  try{
+    const {db,collection,addDoc,serverTimestamp}=window._fb;
+    await addDoc(collection(db,'solicitacoes'),{
+      nome,serie,whatsapp:wpp,materia:mat,
+      dia:diaSel,mes:calMes,ano:calAno,horario:horSel,
+      status:'pendente',
+      criadoEm:serverTimestamp()
+    });
+    ok.style.display='block';
+    document.getElementById('ag-form').style.display='none';
+    document.getElementById('hor-grid-wrap').innerHTML='<div class="hor-placeholder"><i class="ti ti-check"></i><br><br>Solicitação enviada!</div>';
+  }catch(e){
+    erro.textContent='Erro ao enviar. Tente novamente.';
+    erro.style.display='block';
+  }
+}
+
+// ══ LOGIN ══
+function showLogin(t){
+  document.getElementById('login-escolha-view').style.display='none';
+  document.getElementById('login-aluno-view').style.display=t==='aluno'?'block':'none';
+  document.getElementById('login-prof-view').style.display=t==='prof'?'block':'none';
+}
+function backLogin(){
+  document.getElementById('login-escolha-view').style.display='block';
+  document.getElementById('login-aluno-view').style.display='none';
+  document.getElementById('login-prof-view').style.display='none';
+}
+
+async function loginAluno(){
+  const email=document.getElementById('al-u').value;
+  const senha=document.getElementById('al-p').value;
+  const erro=document.getElementById('aluno-erro');
+  try{
+    const {auth,signInWithEmailAndPassword}=window._fb;
+    await signInWithEmailAndPassword(auth,email,senha);
+    // onAuthStateChanged cuida do redirecionamento
+  }catch(e){
+    erro.textContent='E-mail ou senha incorretos.';
+    erro.style.display='block';
+  }
+}
+
+async function loginProf(){
+  const email=document.getElementById('pr-u').value;
+  const senha=document.getElementById('pr-p').value;
+  const erro=document.getElementById('prof-erro');
+  try{
+    const {auth,signInWithEmailAndPassword}=window._fb;
+    await signInWithEmailAndPassword(auth,email,senha);
+  }catch(e){
+    erro.textContent='E-mail ou senha incorretos.';
+    erro.style.display='block';
+  }
+}
+
+async function logout(){
+  const {auth,signOut}=window._fb;
+  await signOut(auth);
+  go('login'); backLogin();
+}
+
+// ══ ÁREA DO ALUNO ══
+async function carregarAulasAluno(uid){
+  const {db,collection,query,where,getDocs,orderBy}=window._fb;
+  const el=document.getElementById('aluno-aulas');
+  try{
+    const q=query(collection(db,'aulas'),where('alunoUid','==',uid),orderBy('data','asc'));
+    const snap=await getDocs(q);
+    if(snap.empty){el.innerHTML='<div class="empty-state">Nenhuma aula agendada.</div>';return;}
+    let h='';
+    snap.forEach(d=>{
+      const a=d.data();
+      const status=a.status==='confirmada'
+        ?'<span class="ag-st st-ok">Confirmada</span>'
+        :'<span class="ag-st st-pend">Aguardando</span>';
+      h+=`<div class="ag-item">
+        <div class="ag-cal"><div class="ag-dia">${a.dia}</div><div class="ag-mes">${meses[a.mes]?.substring(0,3)}</div></div>
+        <div class="ag-info"><h5>${a.materia} — ${a.tema||''}</h5><span>${a.horario} · 1h</span></div>
+        ${status}
+      </div>`;
+    });
+    el.innerHTML=h;
+  }catch(e){el.innerHTML='<div class="empty-state">Erro ao carregar aulas.</div>';}
+}
+
+async function carregarMateriaisAluno(uid){
+  const {db,collection,query,where,getDocs,orderBy}=window._fb;
+  const el=document.getElementById('aluno-materiais');
+  const icones={'Matemática':'im','Língua Portuguesa':'ip','Coordenação Motora Fina':'icm'};
+  try{
+    const q=query(collection(db,'materiais'),where('alunoUid','==',uid),orderBy('criadoEm','desc'));
+    const snap=await getDocs(q);
+    if(snap.empty){el.innerHTML='<div class="empty-state">Nenhum material disponível.</div>';return;}
+    let h='';
+    snap.forEach(d=>{
+      const m=d.data();
+      const ico=icones[m.materia]||'im';
+      h+=`<a class="mat-dl" href="${m.url}" target="_blank">
+        <div class="mdl-ico ${ico}"><i class="ti ti-file-text"></i></div>
+        <div><div class="mdl-nome">${m.titulo}</div><div class="mdl-meta">${m.materia} · ${m.paginas||'?'} pág.</div></div>
+        <i class="ti ti-download mdl-dl"></i>
+      </a>`;
+    });
+    el.innerHTML=h;
+  }catch(e){el.innerHTML='<div class="empty-state">Erro ao carregar materiais.</div>';}
+}
+
+// ══ PAINEL PROFESSORA ══
+async function carregarAgenda(){
+  const {db,collection,query,where,getDocs}=window._fb;
+  const hoje=new Date();
+  const diasNome=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  // Semana atual: seg a sab
+  const semanaEl=document.getElementById('semana-grid');
+  try{
+    const inicio=new Date(hoje); inicio.setDate(hoje.getDate()-hoje.getDay()+1);
+    const dias=[];
+    for(let i=0;i<6;i++){const d=new Date(inicio);d.setDate(inicio.getDate()+i);dias.push(d);}
+    const q=query(collection(db,'aulas'),where('status','==','confirmada'));
+    const snap=await getDocs(q);
+    const aulasPorDia={};
+    snap.forEach(doc=>{
+      const a=doc.data();
+      aulasPorDia[`${a.dia}-${a.mes}`]=aulasPorDia[`${a.dia}-${a.mes}`]||[];
+      aulasPorDia[`${a.dia}-${a.mes}`].push(a);
+    });
+    const cores={'Matemática':'sa-mat','Língua Portuguesa':'sa-port','Coordenação Motora Fina':'sa-coord'};
+    let h='';
+    dias.forEach(d=>{
+      const key=`${d.getDate()}-${d.getMonth()}`;
+      const aulas=aulasPorDia[key]||[];
+      const isHoje=d.toDateString()===hoje.toDateString();
+      h+=`<div class="sem-dia${isHoje?' hoje-d':''}">
+        <div class="sem-dia-nome" ${isHoje?'style="color:var(--gold);"':''}>${diasNome[d.getDay()]}</div>
+        <div class="sem-dia-num" ${isHoje?'style="color:var(--gold);"':''}>${d.getDate()}</div>
+        ${aulas.map(a=>`<div class="sem-aula ${cores[a.materia]||'sa-mat'}">${a.materia.split(' ')[0]} ${a.horario}</div>`).join('')}
+      </div>`;
+    });
+    semanaEl.innerHTML=h||'<div class="empty-state" style="grid-column:span 6;">Sem aulas esta semana.</div>';
+  }catch(e){semanaEl.innerHTML='<div class="empty-state" style="grid-column:span 6;">Erro ao carregar agenda.</div>';}
+
+  // Alunos
+  carregarListaAlunos();
+}
+
+async function carregarSolicitacoes(){
+  const {db,collection,query,where,getDocs,doc,updateDoc}=window._fb;
+  const el=document.getElementById('lista-solicitacoes');
+  try{
+    const q=query(collection(db,'solicitacoes'),where('status','==','pendente'));
+    const snap=await getDocs(q);
+    const badge1=document.getElementById('badge-solicitacoes');
+    const badge2=document.getElementById('badge-sol2');
+    const count=snap.size;
+    badge1.textContent=count; badge2.textContent=count;
+    if(snap.empty){el.innerHTML='<div class="empty-state" style="padding:1rem;">Nenhuma solicitação pendente.</div>';return;}
+    let h='';
+    snap.forEach(d=>{
+      const s=d.data(); const id=d.id;
+      const ini=s.nome.charAt(0).toUpperCase();
+      h+=`<div class="sol-item" id="sol-${id}">
+        <div class="sol-avatar">${ini}</div>
+        <div class="sol-info">
+          <div class="sol-nome">${s.nome} · ${s.serie}</div>
+          <div class="sol-detalhe">${s.materia} · ${s.dia}/${s.mes+1} · ${s.horario}<br>WhatsApp: ${s.whatsapp}</div>
+          <div class="sol-btns">
+            <button class="sb ok" onclick="responderSol('${id}','confirmada')"><i class="ti ti-check"></i> Confirmar</button>
+            <button class="sb no" onclick="responderSol('${id}','recusada')"><i class="ti ti-x"></i> Recusar</button>
+          </div>
+        </div>
+      </div>`;
+    });
+    el.innerHTML=h;
+  }catch(e){el.innerHTML='<div class="empty-state" style="padding:1rem;">Erro ao carregar solicitações.</div>';}
+}
+
+async function responderSol(id,status){
+  const {db,doc,updateDoc,addDoc,collection,serverTimestamp}=window._fb;
+  try{
+    await updateDoc(doc(db,'solicitacoes',id),{status});
+    const el=document.getElementById('sol-'+id);
+    if(status==='confirmada'){
+      el.querySelector('.sol-btns').innerHTML='<div style="margin-top:6px;font-size:12px;color:var(--sage);"><i class="ti ti-check"></i> Confirmada</div>';
+      el.style.opacity='.5';
+    }else{
+      el.style.transition='all .3s';el.style.opacity='0';
+      setTimeout(()=>el.style.display='none',300);
+    }
+    // Atualiza badges
+    const b1=document.getElementById('badge-solicitacoes');
+    const b2=document.getElementById('badge-sol2');
+    b1.textContent=Math.max(0,(parseInt(b1.textContent)||0)-1);
+    b2.textContent=b1.textContent;
+  }catch(e){alert('Erro ao atualizar solicitação.');}
+}
+
+async function carregarListaAlunos(){
+  const {db,collection,getDocs}=window._fb;
+  const el=document.getElementById('lista-alunos');
+  try{
+    const snap=await getDocs(collection(db,'alunos'));
+    if(snap.empty){el.innerHTML='<div class="empty-state">Nenhum aluno cadastrado.</div>';return;}
+    let h=`<div style="display:grid;grid-template-columns:1.5fr 1fr 1.5fr 1fr;padding:.6rem 0;border-bottom:1px solid var(--paper3);font-size:10px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);">
+      <span>Aluno</span><span>Série</span><span>Matéria</span><span>Status</span></div>`;
+    snap.forEach(d=>{
+      const a=d.data();
+      const stCls=a.status==='ativo'?'background:var(--sage-light);color:var(--sage)':'background:var(--gold-light);color:#7a5c10';
+      h+=`<div style="display:grid;grid-template-columns:1.5fr 1fr 1.5fr 1fr;padding:.75rem 0;border-bottom:1px solid var(--paper3);align-items:center;">
+        <span style="font-size:13px;font-weight:400;display:flex;align-items:center;gap:8px;">
+          <div style="width:27px;height:27px;background:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:12px;color:var(--gold2);">${a.nome.charAt(0)}</div>
+          ${a.nome}</span>
+        <span style="font-size:12px;font-weight:300;color:var(--ink3);">${a.serie}</span>
+        <span style="font-size:12px;font-weight:300;color:var(--ink3);">${a.materia}</span>
+        <span style="font-size:10px;font-weight:400;${stCls};padding:2px 8px;border-radius:2px;display:inline-block;">${a.status||'ativo'}</span>
+      </div>`;
+    });
+    el.innerHTML=h;
+  }catch(e){el.innerHTML='<div class="empty-state">Erro ao carregar alunos.</div>';}
+}
+
+// ══ TABS ══
+function trocarTab(t,el){
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('tab-'+t).classList.add('on');
+}
+
+// ══ IA ══
+let planoGerado='';
+async function gerarPlano(){
+  const mat=document.getElementById('ia-mat').value;
+  const serie=document.getElementById('ia-serie').value;
+  const tema=document.getElementById('ia-tema').value;
+  const dur=document.getElementById('ia-dur').value;
+  const dif=document.getElementById('ia-dif').value;
+  const obs=document.getElementById('ia-obs').value;
+  if(!mat||!serie||!tema){alert('Preencha matéria, série e tema.');return;}
+  const result=document.getElementById('ia-result');
+  const wrap=document.getElementById('ia-content-wrap');
+  const actions=document.getElementById('ia-actions');
+  result.style.display='block'; actions.style.display='none';
+  wrap.innerHTML='<div class="ia-loading"><div class="ia-dot"></div><div class="ia-dot"></div><div class="ia-dot"></div><span>Gerando plano de aula...</span></div>';
+
+  const prompt=`Você é uma assistente pedagógica especializada no ensino fundamental brasileiro, apoiando a professora particular Gabriela, de Santa Fé, PR.
+
+O método da Gabriela é lúdico e prático: ela usa brincadeiras, jogos, dinâmicas, atividades manuais e exemplos do cotidiano em todas as aulas. NÃO é só exercício no papel.
+
+Gere um plano de aula completo com os dados abaixo:
+- Matéria: ${mat}
+- Série/Ano: ${serie}
+- Tema/Conteúdo: ${tema}
+- Duração: ${dur}
+- Nível do aluno: ${dif}
+${obs?`- Observações: ${obs}`:''}
+
+Estruture assim (use os títulos exatos):
+
+OBJETIVO DA AULA
+MATERIAIS NECESSÁRIOS
+AQUECIMENTO / CHEGADA (com atividade lúdica ou brincadeira)
+DESENVOLVIMENTO DO CONTEÚDO (com tempo estimado)
+ATIVIDADE PRÁTICA OU JOGO
+VERIFICAÇÃO DO APRENDIZADO
+DICA PARA A PRÓXIMA AULA
+
+Seja direto, prático e criativo. Inclua pelo menos uma brincadeira ou dinâmica. O plano deve estar pronto para usar amanhã.`;
+
+  try{
+    const res=await fetch('/api/plano',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    planoGerado=data.content?.find(b=>b.type==='text')?.text||'Não foi possível gerar. Tente novamente.';
+    wrap.innerHTML=`<div class="ia-content">${planoGerado.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+    actions.style.display='flex';
+  }catch(e){
+    wrap.innerHTML='<div class="ia-content" style="color:var(--red);">Erro ao conectar com a IA. Verifique sua conexão.</div>';
+  }
+}
+
+function copiarPlano(){navigator.clipboard.writeText(planoGerado).then(()=>alert('Plano copiado!'));}
+function novoPlano(){document.getElementById('ia-result').style.display='none';document.getElementById('ia-tema').value='';document.getElementById('ia-obs').value='';}
+
+// ══ INIT ══
+renderCal();
+const dNow=new Date();
+const diasSemana=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+document.getElementById('prof-data-header').textContent=
+  `Gabriela · Santa Fé, PR · ${diasSemana[dNow.getDay()]}, ${dNow.getDate()} ${meses[dNow.getMonth()]} ${dNow.getFullYear()}`;
+</script>
+</body>
+</html>
