@@ -632,24 +632,62 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
       <button class="ptab" onclick="trocarTabAluno('materiais',this)"><i class="ti ti-files"></i> Materiais</button>
     </div>
 
-    <!-- TAB CALENDÁRIO ALUNO -->
+    <!-- TAB AGENDAMENTO ALUNO -->
     <div class="tab-pane on" id="atab-calendario">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
-        <!-- CALENDÁRIO -->
-        <div class="cal-shared">
-          <div class="cal-shared-header">
-            <button class="cal-nav" onclick="calAluno.mudar(-1)">‹</button>
-            <span class="cal-shared-mes" id="cal-aluno-titulo"></span>
-            <button class="cal-nav" onclick="calAluno.mudar(1)">›</button>
+
+        <!-- DIAS DA SEMANA -->
+        <div>
+          <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.85rem;">Escolha o dia da semana</p>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="dia-semana-btn" onclick="agAluno.selecionarDia(1,'Segunda-feira')">Segunda-feira</button>
+            <button class="dia-semana-btn" onclick="agAluno.selecionarDia(2,'Terça-feira')">Terça-feira</button>
+            <button class="dia-semana-btn" onclick="agAluno.selecionarDia(3,'Quarta-feira')">Quarta-feira</button>
+            <button class="dia-semana-btn" onclick="agAluno.selecionarDia(4,'Quinta-feira')">Quinta-feira</button>
+            <button class="dia-semana-btn" onclick="agAluno.selecionarDia(5,'Sexta-feira')">Sexta-feira</button>
           </div>
-          <div class="cal-shared-grid" id="cal-aluno-grid"></div>
+          <p style="font-size:11px;font-weight:300;color:var(--ink3);margin-top:.75rem;"><i class="ti ti-info-circle"></i> Atendimento de segunda a sexta</p>
         </div>
-        <!-- LADO DIREITO -->
-        <div class="cal-side" id="cal-aluno-side">
-          <div class="hor-placeholder" style="background:var(--paper2);border-radius:6px;padding:1.25rem;text-align:center;font-size:13px;font-weight:300;color:var(--ink3);">
-            <i class="ti ti-calendar"></i><br><br>Selecione um dia disponível para ver os horários
+
+        <!-- HORÁRIOS + FORM -->
+        <div id="ag-aluno-lado" style="display:none;">
+          <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;" id="ag-aluno-dia-label"></p>
+          <div id="ag-aluno-carregando" style="font-size:13px;font-weight:300;color:var(--ink3);padding:.5rem 0;display:none;">Verificando horários...</div>
+
+          <div id="ag-aluno-horas">
+            <p style="font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;">Manhã · 08h às 10h</p>
+            <div class="horas-grid" id="horas-manha"></div>
+            <p style="font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;margin-top:.85rem;">Tarde · 14h às 17h</p>
+            <div class="horas-grid" id="horas-tarde"></div>
+          </div>
+
+          <div id="ag-aluno-form" style="display:none;margin-top:1rem;">
+            <div class="resumo-ag" id="ag-aluno-resumo" style="display:block;margin-bottom:.85rem;"></div>
+            <div class="ff2">
+              <div class="ff"><label>Nome</label><input type="text" id="ag-aluno-nome" placeholder="Nome completo"></div>
+              <div class="ff"><label>Série</label><input type="text" id="ag-aluno-serie" placeholder="Ex: 5.º ano"></div>
+            </div>
+            <div class="ff2">
+              <div class="ff"><label>WhatsApp</label><input type="text" id="ag-aluno-wpp" placeholder="(44) 9 "></div>
+              <div class="ff"><label>Matéria</label>
+                <select id="ag-aluno-mat">
+                  <option value="">Selecione</option>
+                  <option>Matemática</option>
+                  <option>Língua Portuguesa</option>
+                  <option>Coordenação Motora Fina</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-dark" style="width:100%;margin-top:4px;" onclick="agAluno.enviar()">Enviar solicitação</button>
+            <p class="msg-erro" id="ag-aluno-erro" style="display:none;margin-top:8px;"></p>
+            <p class="msg-ok" id="ag-aluno-ok" style="display:none;margin-top:8px;"></p>
+          </div>
+
+          <div id="ag-aluno-sel-btn" style="display:none;margin-top:1rem;">
+            <button class="btn btn-dark" style="width:100%;" onclick="agAluno.mostrarForm()">Confirmar horários selecionados</button>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -897,160 +935,83 @@ function trocarTabAluno(t,el){
   panel.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('atab-'+t).classList.add('on');
-  if(t==='calendario') setTimeout(()=>calAluno.render(),50);
+  // nada a renderizar no tab calendario — é estático
 }
 
-// Cache de aulas do aluno para o calendário
-let aulasAluno=[], aulasAlunoUid='';
+let aulasAlunoUid='';
 
 async function carregarAulasAluno(uid){
   aulasAlunoUid=uid;
-  const {db,collection,query,where,getDocs}=window._fb;
-  try{
-    const q=query(collection(db,'solicitacoes'),where('alunoUid','==',uid));
-    const snap=await getDocs(q);
-    aulasAluno=[];
-    snap.forEach(d=>{ aulasAluno.push({id:d.id,...d.data()}); });
-  }catch(e){ console.error(e); }
-  calAluno.render();
+  // Nada a pré-carregar — horários são buscados ao selecionar dia
 }
 
-// Calendário do aluno
-const calAluno = {
-  ano: new Date().getFullYear(),
-  mes: new Date().getMonth(),
-  diaSel: null,
+// Agendamento do aluno por dia da semana
+const agAluno = {
+  diaSemana: null,
+  diaSemanaNome: '',
   horSel: [],
 
-  mudar(d){
-    this.mes+=d;
-    if(this.mes>11){this.mes=0;this.ano++;}
-    if(this.mes<0){this.mes=11;this.ano--;}
-    this.diaSel=null; this.horSel=[];
-    this.render();
-    document.getElementById('cal-aluno-side').innerHTML='<div class="hor-placeholder" style="background:var(--paper2);border-radius:6px;padding:1.25rem;text-align:center;font-size:13px;font-weight:300;color:var(--ink3);"><i class="ti ti-calendar"></i><br><br>Selecione um dia disponível</div>';
-  },
+  async selecionarDia(num, nome){
+    this.diaSemana=num; this.diaSemanaNome=nome; this.horSel=[];
 
-  render(){
-    const titulo=document.getElementById('cal-aluno-titulo');
-    const grid=document.getElementById('cal-aluno-grid');
-    if(!titulo||!grid) return;
-    titulo.textContent=meses[this.mes]+' '+this.ano;
-    const hoje=new Date();
-    const amanha=new Date(hoje); amanha.setDate(hoje.getDate()+1);
-    const prim=new Date(this.ano,this.mes,1).getDay();
-    const total=new Date(this.ano,this.mes+1,0).getDate();
-    let h='';
-    ['D','S','T','Q','Q','S','S'].forEach(d=>{h+=`<div class="cal-sdow">${d}</div>`;});
-    for(let i=0;i<prim;i++) h+='<div class="cal-sday vazio-mark"></div>';
-    for(let d=1;d<=total;d++){
-      const data=new Date(this.ano,this.mes,d);
-      const wd=data.getDay();
-      const passado=data<amanha;
-      const diaSemana=wd>=1&&wd<=5; // seg-sex
-      const isHoje=data.toDateString()===hoje.toDateString();
-      const isSel=d===this.diaSel;
-      // Verifica se tem aulas nesse dia
-      const temAula=aulasAluno.some(a=>a.dia===d&&a.mes===this.mes&&a.ano===this.ano);
-      let cls='cal-sday';
-      if(passado) cls+=' passado-mark';
-      else if(diaSemana) cls+=' clicavel';
-      else cls+=' passado-mark';
-      if(isHoje) cls+=' hoje-mark';
-      if(isSel) cls+=' selecionado';
-      if(temAula&&!passado) cls+=' tem-aula';
-      const clk=(!passado&&diaSemana)?`onclick="calAluno.selecionarDia(${d})"`:''  ;
-      h+=`<div class="${cls}" ${clk}>${d}</div>`;
-    }
-    grid.innerHTML=h;
-  },
+    // Highlight botão
+    document.querySelectorAll('.dia-semana-btn').forEach(b=>{
+      b.classList.toggle('sel', b.textContent.trim()===nome);
+    });
 
-  async selecionarDia(d){
-    this.diaSel=d; this.horSel=[]; this.render();
-    const nd=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-    const wd=new Date(this.ano,this.mes,d).getDay();
-    const nomeDia=`${nd[wd]}, ${d} de ${meses[this.mes]}`;
+    // Mostrar lado direito
+    const lado=document.getElementById('ag-aluno-lado');
+    lado.style.display='block';
+    document.getElementById('ag-aluno-dia-label').textContent=nome;
+    document.getElementById('ag-aluno-carregando').style.display='block';
+    document.getElementById('ag-aluno-horas').style.display='none';
+    document.getElementById('ag-aluno-form').style.display='none';
+    document.getElementById('ag-aluno-sel-btn').style.display='none';
 
-    // Busca horários já ocupados nesse dia
+    // Busca horários já ocupados nesse dia da semana (confirmados ou pendentes)
     const {db,collection,query,where,getDocs}=window._fb;
     let ocupados=[];
     try{
-      const q=query(collection(db,'solicitacoes'),where('dia','==',d),where('mes','==',this.mes),where('ano','==',this.ano));
+      const q=query(collection(db,'solicitacoes'),where('diaSemana','==',num));
       const snap=await getDocs(q);
-      snap.forEach(doc=>{ if(doc.data().status!=='recusada') ocupados.push(doc.data().horario); });
-    }catch(e){}
+      snap.forEach(doc=>{
+        const d=doc.data();
+        if(d.status!=='recusada') ocupados.push(d.horario);
+      });
+    }catch(e){ console.error(e); }
 
-    // Horários do aluno nesse dia
-    const minhasAulas=aulasAluno.filter(a=>a.dia===d&&a.mes===this.mes&&a.ano===this.ano).map(a=>a.horario);
+    document.getElementById('ag-aluno-carregando').style.display='none';
+    document.getElementById('ag-aluno-horas').style.display='block';
 
     const horasManha=['08h00','08h30','09h00','09h30','10h00'];
     const horasTarde=['14h00','14h30','15h00','15h30','16h00','16h30','17h00'];
 
     const btnHora=(h)=>{
-      const isMinha=minhasAulas.includes(h);
-      const isOcup=ocupados.includes(h)&&!isMinha;
-      let cls='hora-btn';
-      if(isMinha) cls+=' minha-aula';
-      else if(isOcup) cls+=' ocupado';
-      const label=isMinha?h+' ✓':h;
-      return `<button class="${cls}" ${isOcup||isMinha?'disabled':''} onclick="calAluno.toggleHora('${h}')">${label}</button>`;
+      const isOcup=ocupados.includes(h);
+      const cls='hora-btn'+(isOcup?' ocupado':'');
+      return `<button class="${cls}" ${isOcup?'disabled':''} onclick="agAluno.toggleHora('${h}')">${h}</button>`;
     };
 
-    document.getElementById('cal-aluno-side').innerHTML=`
-      <div class="cal-side">
-        <div>
-          <div class="cal-side-titulo">${nomeDia}</div>
-          <div class="cal-side-sub">Selecione um ou mais horários</div>
-          <div class="horas-section-label">Manhã · 08h às 10h</div>
-          <div class="horas-grid">${horasManha.map(btnHora).join('')}</div>
-          <div class="horas-section-label">Tarde · 14h às 17h</div>
-          <div class="horas-grid">${horasTarde.map(btnHora).join('')}</div>
-        </div>
-        <div id="ag-aluno-form" style="display:none;">
-          <div class="resumo-ag" id="ag-aluno-resumo" style="display:block;"></div>
-          <div class="ff2">
-            <div class="ff"><label>Nome</label><input type="text" id="ag-aluno-nome" placeholder="Nome completo"></div>
-            <div class="ff"><label>Série</label><input type="text" id="ag-aluno-serie" placeholder="Ex: 5.º ano"></div>
-          </div>
-          <div class="ff2">
-            <div class="ff"><label>WhatsApp</label><input type="text" id="ag-aluno-wpp" placeholder="(44) 9 "></div>
-            <div class="ff"><label>Matéria</label>
-              <select id="ag-aluno-mat">
-                <option value="">Selecione</option>
-                <option>Matemática</option>
-                <option>Língua Portuguesa</option>
-                <option>Coordenação Motora Fina</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn btn-dark" style="width:100%;margin-top:4px;" onclick="calAluno.enviar()">Enviar solicitação</button>
-          <p class="msg-erro" id="ag-aluno-erro" style="display:none;"></p>
-          <p class="msg-ok" id="ag-aluno-ok" style="display:none;"></p>
-        </div>
-        <div id="ag-aluno-sel-btn" style="display:none;">
-          <button class="btn btn-dark" style="width:100%;" onclick="calAluno.mostrarForm()">Confirmar horários selecionados</button>
-        </div>
-      </div>`;
+    document.getElementById('horas-manha').innerHTML=horasManha.map(btnHora).join('');
+    document.getElementById('horas-tarde').innerHTML=horasTarde.map(btnHora).join('');
   },
 
   toggleHora(h){
     const idx=this.horSel.indexOf(h);
     if(idx>=0) this.horSel.splice(idx,1);
     else this.horSel.push(h);
-    // Update visual
-    document.querySelectorAll('.hora-btn').forEach(b=>{
-      if(b.textContent===h) b.classList.toggle('sel',this.horSel.includes(h));
+    // Update visual — match only available buttons
+    document.querySelectorAll('#ag-aluno-horas .hora-btn:not(.ocupado)').forEach(b=>{
+      if(b.textContent.trim()===h) b.classList.toggle('sel', this.horSel.includes(h));
     });
     const btn=document.getElementById('ag-aluno-sel-btn');
     if(btn) btn.style.display=this.horSel.length>0?'block':'none';
   },
 
   mostrarForm(){
-    const form=document.getElementById('ag-aluno-form');
     const resumo=document.getElementById('ag-aluno-resumo');
-    if(!form) return;
-    resumo.innerHTML=`<strong>Horários selecionados</strong>${this.horSel.join(', ')} · ${this.diaSel}/${this.mes+1}/${this.ano}`;
-    form.style.display='block';
+    resumo.innerHTML=`<strong>${this.diaSemanaNome} — horários selecionados</strong>${this.horSel.sort().join(' · ')} (todas as semanas)`;
+    document.getElementById('ag-aluno-form').style.display='block';
     document.getElementById('ag-aluno-sel-btn').style.display='none';
   },
 
@@ -1070,19 +1031,24 @@ const calAluno = {
       const {db,collection,addDoc,serverTimestamp}=window._fb;
       for(const h of this.horSel){
         await addDoc(collection(db,'solicitacoes'),{
-          nome,serie,whatsapp:wpp,materia:mat,
-          dia:this.diaSel,mes:this.mes,ano:this.ano,
+          nome, serie, whatsapp:wpp, materia:mat,
+          diaSemana:this.diaSemana,
+          diaSemanaNome:this.diaSemanaNome,
           horario:h,
+          tipo:'semanal',
           alunoUid:aulasAlunoUid||'',
           status:'pendente',
           criadoEm:serverTimestamp()
         });
       }
-      ok.textContent='Solicitação enviada! A professora confirmará em breve.';
+      ok.textContent='Solicitação enviada! A professora confirmará em breve pelo WhatsApp.';
       ok.style.display='block';
       document.getElementById('ag-aluno-form').style.display='none';
-      this.horSel=[];
-      await carregarAulasAluno(aulasAlunoUid);
+      document.getElementById('ag-aluno-horas').style.display='none';
+      document.getElementById('ag-aluno-sel-btn').style.display='none';
+      // Reset
+      this.horSel=[]; this.diaSemana=null;
+      document.querySelectorAll('.dia-semana-btn').forEach(b=>b.classList.remove('sel'));
     }catch(e){
       erro.textContent='Erro ao enviar. Tente novamente.';
       erro.style.display='block';
