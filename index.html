@@ -165,6 +165,45 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 .dia-semana-btn:hover{border-color:var(--sage);color:var(--sage);}
 .dia-semana-btn.sel{background:var(--ink);border-color:var(--ink);color:var(--paper);}
 .dia-semana-btn.sel::after{content:'✓';font-size:12px;}
+
+/* ── CALENDÁRIO COMPARTILHADO ── */
+.cal-shared{background:var(--paper2);border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.cal-shared-header{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.25rem;border-bottom:1px solid var(--paper3);}
+.cal-shared-mes{font-family:var(--serif);font-size:16px;font-weight:400;}
+.cal-shared-grid{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;}
+.cal-sdow{font-size:10px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:.55rem 0;}
+.cal-sday{font-size:13px;font-weight:300;padding:.52rem 0;border-radius:3px;margin:1px;position:relative;}
+.cal-sday.clicavel{cursor:pointer;transition:background var(--tr),color var(--tr);}
+.cal-sday.clicavel:hover{background:var(--paper3);}
+.cal-sday.selecionado{background:var(--ink)!important;color:var(--paper)!important;}
+.cal-sday.hoje-mark{color:var(--gold);font-weight:500;}
+.cal-sday.passado-mark{color:var(--paper3);cursor:default;}
+.cal-sday.vazio-mark{cursor:default;}
+.cal-sday.tem-aula{font-weight:500;}
+.cal-sday.tem-aula::after{content:'';display:block;width:4px;height:4px;border-radius:50%;background:var(--sage);margin:1px auto 0;}
+.cal-sday.lotado::after{background:var(--red);}
+
+/* painel lateral do calendário */
+.cal-side{display:flex;flex-direction:column;gap:12px;}
+.cal-side-titulo{font-family:var(--serif);font-size:16px;font-weight:400;margin-bottom:.1rem;}
+.cal-side-sub{font-size:12px;font-weight:300;color:var(--ink3);margin-bottom:.75rem;}
+.horas-section-label{font-size:10px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;margin-top:.75rem;}
+.horas-section-label:first-child{margin-top:0;}
+.horas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:.25rem;}
+.hora-btn{font-family:var(--sans);font-size:12px;font-weight:400;padding:7px 4px;text-align:center;border-radius:3px;background:var(--paper2);border:1px solid var(--paper3);cursor:pointer;transition:all var(--tr);color:var(--ink2);}
+.hora-btn:hover:not(:disabled){border-color:var(--sage);color:var(--sage);}
+.hora-btn.sel{background:var(--sage);border-color:var(--sage);color:#fff;}
+.hora-btn.ocupado{background:var(--paper3);color:var(--paper3);cursor:default;border-color:var(--paper3);pointer-events:none;}
+.hora-btn.minha-aula{background:var(--gold-light);border-color:var(--gold2);color:#7a5c10;cursor:default;pointer-events:none;}
+
+/* visão prof: aulas do dia */
+.aula-dia-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--paper3);}
+.aula-dia-item:last-child{border-bottom:none;}
+.aula-dia-hora{font-family:var(--serif);font-size:15px;font-weight:400;min-width:44px;color:var(--ink);}
+.aula-dia-info{flex:1;}
+.aula-dia-nome{font-size:13px;font-weight:400;}
+.aula-dia-meta{font-size:11px;font-weight:300;color:var(--ink3);}
+.aula-dia-mat{font-size:10px;font-weight:400;padding:2px 7px;border-radius:2px;margin-left:auto;}
 .hor-placeholder{font-size:13px;font-weight:300;color:var(--ink3);padding:1.25rem;background:var(--paper2);border-radius:6px;text-align:center;}
 .hor-titulo{font-family:var(--serif);font-size:16px;font-weight:400;margin-bottom:.2rem;}
 .hor-sub{font-size:12px;font-weight:300;color:var(--ink3);margin-bottom:1rem;}
@@ -326,6 +365,8 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
   .prof-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .ptab{white-space:nowrap;padding:.65rem .9rem;font-size:12px;}
   .prof-ag-cols{grid-template-columns:1fr;}
+  #pg-aluno .tab-pane > div[style*='grid']{grid-template-columns:1fr!important;}
+  #tab-agenda > div[style*='grid']{grid-template-columns:1fr!important;}
   .semana-grid{grid-template-columns:repeat(3,1fr);}
   .ia-form{padding:1rem;}
   .ia-grid{grid-template-columns:1fr;}
@@ -572,11 +613,36 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
       <div><div class="dt-nome" id="aluno-nome-dash">Olá!</div><div class="dt-meta" id="aluno-meta-dash">Área do aluno</div></div>
       <button class="dt-logout" onclick="logout()"><i class="ti ti-logout"></i> Sair</button>
     </div>
-    <div class="aluno-cols">
-      <div class="dash-bloco">
-        <div class="db-head"><i class="ti ti-calendar-event"></i><h4>Próximas aulas</h4></div>
-        <div class="db-body" id="aluno-aulas"><div class="empty-state">Carregando...</div></div>
+
+    <!-- TABS ALUNO -->
+    <div class="prof-tabs" style="margin-bottom:1.25rem;">
+      <button class="ptab on" onclick="trocarTabAluno('calendario',this)"><i class="ti ti-calendar"></i> Agendar aula</button>
+      <button class="ptab" onclick="trocarTabAluno('materiais',this)"><i class="ti ti-files"></i> Materiais</button>
+    </div>
+
+    <!-- TAB CALENDÁRIO ALUNO -->
+    <div class="tab-pane on" id="atab-calendario">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+        <!-- CALENDÁRIO -->
+        <div class="cal-shared">
+          <div class="cal-shared-header">
+            <button class="cal-nav" onclick="calAluno.mudar(-1)">‹</button>
+            <span class="cal-shared-mes" id="cal-aluno-titulo"></span>
+            <button class="cal-nav" onclick="calAluno.mudar(1)">›</button>
+          </div>
+          <div class="cal-shared-grid" id="cal-aluno-grid"></div>
+        </div>
+        <!-- LADO DIREITO -->
+        <div class="cal-side" id="cal-aluno-side">
+          <div class="hor-placeholder" style="background:var(--paper2);border-radius:6px;padding:1.25rem;text-align:center;font-size:13px;font-weight:300;color:var(--ink3);">
+            <i class="ti ti-calendar"></i><br><br>Selecione um dia disponível para ver os horários
+          </div>
+        </div>
       </div>
+    </div>
+
+    <!-- TAB MATERIAIS -->
+    <div class="tab-pane" id="atab-materiais">
       <div class="dash-bloco">
         <div class="db-head"><i class="ti ti-files"></i><h4>Materiais de estudo</h4></div>
         <div class="db-body" id="aluno-materiais"><div class="empty-state">Carregando...</div></div>
@@ -602,17 +668,31 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 
     <!-- TAB AGENDA -->
     <div class="tab-pane on" id="tab-agenda">
-      <div class="prof-ag-cols">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">
+        <!-- CALENDÁRIO PROF -->
         <div>
-          <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.75rem;">Esta semana</p>
-          <div class="semana-grid" id="semana-grid">
-            <div class="empty-state" style="grid-column:span 6;">Carregando...</div>
+          <div class="cal-shared">
+            <div class="cal-shared-header">
+              <button class="cal-nav" onclick="calProf.mudar(-1)">‹</button>
+              <span class="cal-shared-mes" id="cal-prof-titulo"></span>
+              <button class="cal-nav" onclick="calProf.mudar(1)">›</button>
+            </div>
+            <div class="cal-shared-grid" id="cal-prof-grid"></div>
           </div>
         </div>
-        <div>
-          <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.75rem;">Solicitações pendentes <span class="badge-novo" id="badge-sol2">0</span></p>
-          <div class="ag-solicitacoes" id="lista-solicitacoes">
-            <div class="empty-state" style="padding:1rem;">Nenhuma solicitação pendente</div>
+        <!-- LADO DIREITO PROF -->
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <!-- Aulas do dia selecionado -->
+          <div class="dash-bloco">
+            <div class="db-head"><i class="ti ti-clock"></i><h4 id="prof-dia-titulo">Selecione um dia</h4></div>
+            <div class="db-body" id="prof-dia-aulas"><div class="empty-state">Clique em um dia para ver as aulas.</div></div>
+          </div>
+          <!-- Solicitações pendentes -->
+          <div>
+            <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.75rem;">Solicitações pendentes <span class="badge-novo" id="badge-sol2">0</span></p>
+            <div class="ag-solicitacoes" id="lista-solicitacoes">
+              <div class="empty-state" style="padding:1rem;">Nenhuma solicitação pendente</div>
+            </div>
           </div>
         </div>
       </div>
@@ -799,28 +879,201 @@ async function logout(){
 }
 
 // ══ ÁREA DO ALUNO ══
-async function carregarAulasAluno(uid){
-  const {db,collection,query,where,getDocs,orderBy}=window._fb;
-  const el=document.getElementById('aluno-aulas');
-  try{
-    const q=query(collection(db,'aulas'),where('alunoUid','==',uid),orderBy('data','asc'));
-    const snap=await getDocs(q);
-    if(snap.empty){el.innerHTML='<div class="empty-state">Nenhuma aula agendada.</div>';return;}
-    let h='';
-    snap.forEach(d=>{
-      const a=d.data();
-      const status=a.status==='confirmada'
-        ?'<span class="ag-st st-ok">Confirmada</span>'
-        :'<span class="ag-st st-pend">Aguardando</span>';
-      h+=`<div class="ag-item">
-        <div class="ag-cal"><div class="ag-dia">${a.dia}</div><div class="ag-mes">${meses[a.mes]?.substring(0,3)}</div></div>
-        <div class="ag-info"><h5>${a.materia} — ${a.tema||''}</h5><span>${a.horario} · 1h</span></div>
-        ${status}
-      </div>`;
-    });
-    el.innerHTML=h;
-  }catch(e){el.innerHTML='<div class="empty-state">Erro ao carregar aulas.</div>';}
+function trocarTabAluno(t,el){
+  document.querySelectorAll('#pg-aluno .ptab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#pg-aluno .tab-pane').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('atab-'+t).classList.add('on');
 }
+
+// Cache de aulas do aluno para o calendário
+let aulasAluno=[], aulasAlunoUid='';
+
+async function carregarAulasAluno(uid){
+  aulasAlunoUid=uid;
+  const {db,collection,query,where,getDocs}=window._fb;
+  try{
+    const q=query(collection(db,'solicitacoes'),where('alunoUid','==',uid));
+    const snap=await getDocs(q);
+    aulasAluno=[];
+    snap.forEach(d=>{ aulasAluno.push({id:d.id,...d.data()}); });
+    calAluno.render();
+  }catch(e){ console.error(e); }
+}
+
+// Calendário do aluno
+const calAluno = {
+  ano: new Date().getFullYear(),
+  mes: new Date().getMonth(),
+  diaSel: null,
+  horSel: [],
+
+  mudar(d){
+    this.mes+=d;
+    if(this.mes>11){this.mes=0;this.ano++;}
+    if(this.mes<0){this.mes=11;this.ano--;}
+    this.diaSel=null; this.horSel=[];
+    this.render();
+    document.getElementById('cal-aluno-side').innerHTML='<div class="hor-placeholder" style="background:var(--paper2);border-radius:6px;padding:1.25rem;text-align:center;font-size:13px;font-weight:300;color:var(--ink3);"><i class="ti ti-calendar"></i><br><br>Selecione um dia disponível</div>';
+  },
+
+  render(){
+    const titulo=document.getElementById('cal-aluno-titulo');
+    const grid=document.getElementById('cal-aluno-grid');
+    titulo.textContent=meses[this.mes]+' '+this.ano;
+    const hoje=new Date();
+    const amanha=new Date(hoje); amanha.setDate(hoje.getDate()+1);
+    const prim=new Date(this.ano,this.mes,1).getDay();
+    const total=new Date(this.ano,this.mes+1,0).getDate();
+    let h='';
+    ['D','S','T','Q','Q','S','S'].forEach(d=>{h+=`<div class="cal-sdow">${d}</div>`;});
+    for(let i=0;i<prim;i++) h+='<div class="cal-sday vazio-mark"></div>';
+    for(let d=1;d<=total;d++){
+      const data=new Date(this.ano,this.mes,d);
+      const wd=data.getDay();
+      const passado=data<amanha;
+      const diaSemana=wd>=1&&wd<=5; // seg-sex
+      const isHoje=data.toDateString()===hoje.toDateString();
+      const isSel=d===this.diaSel;
+      // Verifica se tem aulas nesse dia
+      const temAula=aulasAluno.some(a=>a.dia===d&&a.mes===this.mes&&a.ano===this.ano);
+      let cls='cal-sday';
+      if(passado) cls+=' passado-mark';
+      else if(diaSemana) cls+=' clicavel';
+      else cls+=' passado-mark';
+      if(isHoje) cls+=' hoje-mark';
+      if(isSel) cls+=' selecionado';
+      if(temAula&&!passado) cls+=' tem-aula';
+      const clk=(!passado&&diaSemana)?`onclick="calAluno.selecionarDia(${d})"`:''  ;
+      h+=`<div class="${cls}" ${clk}>${d}</div>`;
+    }
+    grid.innerHTML=h;
+  },
+
+  async selecionarDia(d){
+    this.diaSel=d; this.horSel=[]; this.render();
+    const nd=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    const wd=new Date(this.ano,this.mes,d).getDay();
+    const nomeDia=`${nd[wd]}, ${d} de ${meses[this.mes]}`;
+
+    // Busca horários já ocupados nesse dia
+    const {db,collection,query,where,getDocs}=window._fb;
+    let ocupados=[];
+    try{
+      const q=query(collection(db,'solicitacoes'),where('dia','==',d),where('mes','==',this.mes),where('ano','==',this.ano));
+      const snap=await getDocs(q);
+      snap.forEach(doc=>{ if(doc.data().status!=='recusada') ocupados.push(doc.data().horario); });
+    }catch(e){}
+
+    // Horários do aluno nesse dia
+    const minhasAulas=aulasAluno.filter(a=>a.dia===d&&a.mes===this.mes&&a.ano===this.ano).map(a=>a.horario);
+
+    const horasManha=['08h00','08h30','09h00','09h30','10h00'];
+    const horasTarde=['14h00','14h30','15h00','15h30','16h00','16h30','17h00'];
+
+    const btnHora=(h)=>{
+      const isMinha=minhasAulas.includes(h);
+      const isOcup=ocupados.includes(h)&&!isMinha;
+      let cls='hora-btn';
+      if(isMinha) cls+=' minha-aula';
+      else if(isOcup) cls+=' ocupado';
+      const label=isMinha?h+' ✓':h;
+      return `<button class="${cls}" ${isOcup||isMinha?'disabled':''} onclick="calAluno.toggleHora('${h}')">${label}</button>`;
+    };
+
+    document.getElementById('cal-aluno-side').innerHTML=`
+      <div class="cal-side">
+        <div>
+          <div class="cal-side-titulo">${nomeDia}</div>
+          <div class="cal-side-sub">Selecione um ou mais horários</div>
+          <div class="horas-section-label">Manhã · 08h às 10h</div>
+          <div class="horas-grid">${horasManha.map(btnHora).join('')}</div>
+          <div class="horas-section-label">Tarde · 14h às 17h</div>
+          <div class="horas-grid">${horasTarde.map(btnHora).join('')}</div>
+        </div>
+        <div id="ag-aluno-form" style="display:none;">
+          <div class="resumo-ag" id="ag-aluno-resumo" style="display:block;"></div>
+          <div class="ff2">
+            <div class="ff"><label>Nome</label><input type="text" id="ag-aluno-nome" placeholder="Nome completo"></div>
+            <div class="ff"><label>Série</label><input type="text" id="ag-aluno-serie" placeholder="Ex: 5.º ano"></div>
+          </div>
+          <div class="ff2">
+            <div class="ff"><label>WhatsApp</label><input type="text" id="ag-aluno-wpp" placeholder="(44) 9 "></div>
+            <div class="ff"><label>Matéria</label>
+              <select id="ag-aluno-mat">
+                <option value="">Selecione</option>
+                <option>Matemática</option>
+                <option>Língua Portuguesa</option>
+                <option>Coordenação Motora Fina</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-dark" style="width:100%;margin-top:4px;" onclick="calAluno.enviar()">Enviar solicitação</button>
+          <p class="msg-erro" id="ag-aluno-erro" style="display:none;"></p>
+          <p class="msg-ok" id="ag-aluno-ok" style="display:none;"></p>
+        </div>
+        <div id="ag-aluno-sel-btn" style="display:none;">
+          <button class="btn btn-dark" style="width:100%;" onclick="calAluno.mostrarForm()">Confirmar horários selecionados</button>
+        </div>
+      </div>`;
+  },
+
+  toggleHora(h){
+    const idx=this.horSel.indexOf(h);
+    if(idx>=0) this.horSel.splice(idx,1);
+    else this.horSel.push(h);
+    // Update visual
+    document.querySelectorAll('.hora-btn').forEach(b=>{
+      if(b.textContent===h) b.classList.toggle('sel',this.horSel.includes(h));
+    });
+    const btn=document.getElementById('ag-aluno-sel-btn');
+    if(btn) btn.style.display=this.horSel.length>0?'block':'none';
+  },
+
+  mostrarForm(){
+    const form=document.getElementById('ag-aluno-form');
+    const resumo=document.getElementById('ag-aluno-resumo');
+    if(!form) return;
+    resumo.innerHTML=`<strong>Horários selecionados</strong>${this.horSel.join(', ')} · ${this.diaSel}/${this.mes+1}/${this.ano}`;
+    form.style.display='block';
+    document.getElementById('ag-aluno-sel-btn').style.display='none';
+  },
+
+  async enviar(){
+    const nome=document.getElementById('ag-aluno-nome')?.value.trim();
+    const serie=document.getElementById('ag-aluno-serie')?.value.trim();
+    const wpp=document.getElementById('ag-aluno-wpp')?.value.trim();
+    const mat=document.getElementById('ag-aluno-mat')?.value;
+    const erro=document.getElementById('ag-aluno-erro');
+    const ok=document.getElementById('ag-aluno-ok');
+    if(!nome||!serie||!wpp||!mat||this.horSel.length===0){
+      erro.textContent='Preencha todos os campos e selecione ao menos um horário.';
+      erro.style.display='block'; return;
+    }
+    erro.style.display='none';
+    try{
+      const {db,collection,addDoc,serverTimestamp}=window._fb;
+      for(const h of this.horSel){
+        await addDoc(collection(db,'solicitacoes'),{
+          nome,serie,whatsapp:wpp,materia:mat,
+          dia:this.diaSel,mes:this.mes,ano:this.ano,
+          horario:h,
+          alunoUid:aulasAlunoUid||'',
+          status:'pendente',
+          criadoEm:serverTimestamp()
+        });
+      }
+      ok.textContent='Solicitação enviada! A professora confirmará em breve.';
+      ok.style.display='block';
+      document.getElementById('ag-aluno-form').style.display='none';
+      this.horSel=[];
+      await carregarAulasAluno(aulasAlunoUid);
+    }catch(e){
+      erro.textContent='Erro ao enviar. Tente novamente.';
+      erro.style.display='block';
+    }
+  }
+};
 
 async function carregarMateriaisAluno(uid){
   const {db,collection,query,where,getDocs,orderBy}=window._fb;
@@ -1078,6 +1331,7 @@ function novoPlano(){document.getElementById('ia-result').style.display='none';d
 // ══ INIT ══
 const dNow=new Date();
 const diasSemana=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+calProf.render();
 document.getElementById('prof-data-header').textContent=
   `Gabriela · Santa Fé, PR · ${diasSemana[dNow.getDay()]}, ${dNow.getDate()} ${meses[dNow.getMonth()]} ${dNow.getFullYear()}`;
 </script>
