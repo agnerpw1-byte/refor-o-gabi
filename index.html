@@ -290,11 +290,50 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 .footer-info{font-size:11px;font-weight:300;color:var(--ink3);text-align:right;}
 
 @media(max-width:640px){
-  .hero{grid-template-columns:1fr;}
-  .hero-panel{display:none;}
-  .mat-grid,.trab-grid{grid-template-columns:1fr;}
-  .agenda-wrap,.aluno-cols,.prof-ag-cols,.semana-grid{grid-template-columns:1fr;}
+  body{max-width:100%;overflow-x:hidden;}
+  .nav{padding:0 1rem;height:52px;}
+  .logo{font-size:17px;}
+  .logo small{display:none;}
   .nav-r .nb:not(.cta){display:none;}
+  .nb.cta{padding:6px 12px;font-size:12px;margin-left:2px;}
+  .hero{grid-template-columns:1fr;padding:2rem 1rem 1.75rem;gap:1.5rem;}
+  .hero-panel{display:none;}
+  .hero h1{font-size:34px;}
+  .hero-lead{font-size:13px;}
+  .hero-actions{flex-direction:column;}
+  .hero-actions .btn{width:100%;text-align:center;}
+  .sec{padding:2rem 1rem;}
+  .sec-t{font-size:26px;}
+  .mat-grid,.trab-grid{grid-template-columns:1fr;}
+  .ff2{grid-template-columns:1fr;}
+  .metodo-item{gap:1rem;}
+  .metodo-n{font-size:26px;min-width:36px;}
+  .agenda-wrap{grid-template-columns:1fr;gap:1.5rem;}
+  .cal-day{padding:.45rem 0;font-size:12px;}
+  .login-escolha{grid-template-columns:1fr;max-width:100%;}
+  .login-form-wrap{padding:.75rem 0;}
+  .aluno-dash{padding:1rem;}
+  .aluno-cols{grid-template-columns:1fr;}
+  .dash-topo{padding:1rem;flex-wrap:wrap;gap:.75rem;}
+  .dt-logout{margin-left:auto;}
+  .prof-dash{padding:1rem;}
+  .prof-header{padding:1rem;flex-wrap:wrap;gap:.75rem;}
+  .ph-esq h3{font-size:16px;}
+  .prof-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .ptab{white-space:nowrap;padding:.65rem .9rem;font-size:12px;}
+  .prof-ag-cols{grid-template-columns:1fr;}
+  .semana-grid{grid-template-columns:repeat(3,1fr);}
+  .ia-form{padding:1rem;}
+  .ia-grid{grid-template-columns:1fr;}
+  .ia-actions{flex-direction:column;}
+  .ia-actions .btn{width:100%;text-align:center;}
+  .footer{flex-direction:column;gap:.5rem;text-align:center;padding:1rem;}
+  .footer-info{text-align:center;}
+  .ag-form{padding:1rem;}
+  .hor-grid{grid-template-columns:repeat(3,1fr);}
+  .btn{padding:10px 18px;}
+  .db-head{padding:.75rem 1rem;}
+  .db-body{padding:.5rem 1rem .75rem;}
 }
 </style>
 </head>
