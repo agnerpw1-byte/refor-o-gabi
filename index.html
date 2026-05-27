@@ -1113,42 +1113,83 @@ async function carregarMateriaisAluno(uid){
 }
 
 // ══ PAINEL PROFESSORA ══
+let aulasProf=[];
+
 async function carregarAgenda(){
   const {db,collection,query,where,getDocs}=window._fb;
-  const hoje=new Date();
-  const diasNome=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  // Semana atual: seg a sab
-  const semanaEl=document.getElementById('semana-grid');
   try{
-    const inicio=new Date(hoje); inicio.setDate(hoje.getDate()-hoje.getDay()+1);
-    const dias=[];
-    for(let i=0;i<6;i++){const d=new Date(inicio);d.setDate(inicio.getDate()+i);dias.push(d);}
-    const q=query(collection(db,'aulas'),where('status','==','confirmada'));
+    const q=query(collection(db,'solicitacoes'),where('status','==','confirmada'));
     const snap=await getDocs(q);
-    const aulasPorDia={};
-    snap.forEach(doc=>{
-      const a=doc.data();
-      aulasPorDia[`${a.dia}-${a.mes}`]=aulasPorDia[`${a.dia}-${a.mes}`]||[];
-      aulasPorDia[`${a.dia}-${a.mes}`].push(a);
-    });
-    const cores={'Matemática':'sa-mat','Língua Portuguesa':'sa-port','Coordenação Motora Fina':'sa-coord'};
-    let h='';
-    dias.forEach(d=>{
-      const key=`${d.getDate()}-${d.getMonth()}`;
-      const aulas=aulasPorDia[key]||[];
-      const isHoje=d.toDateString()===hoje.toDateString();
-      h+=`<div class="sem-dia${isHoje?' hoje-d':''}">
-        <div class="sem-dia-nome" ${isHoje?'style="color:var(--gold);"':''}>${diasNome[d.getDay()]}</div>
-        <div class="sem-dia-num" ${isHoje?'style="color:var(--gold);"':''}>${d.getDate()}</div>
-        ${aulas.map(a=>`<div class="sem-aula ${cores[a.materia]||'sa-mat'}">${a.materia.split(' ')[0]} ${a.horario}</div>`).join('')}
-      </div>`;
-    });
-    semanaEl.innerHTML=h||'<div class="empty-state" style="grid-column:span 6;">Sem aulas esta semana.</div>';
-  }catch(e){semanaEl.innerHTML='<div class="empty-state" style="grid-column:span 6;">Erro ao carregar agenda.</div>';}
-
-  // Alunos
+    aulasProf=[];
+    snap.forEach(d=>{ aulasProf.push({id:d.id,...d.data()}); });
+  }catch(e){ console.error('carregarAgenda erro:',e); }
+  calProf.render();
   carregarListaAlunos();
 }
+
+// Calendário da professora
+const calProf = {
+  ano: new Date().getFullYear(),
+  mes: new Date().getMonth(),
+  diaSel: null,
+
+  mudar(d){
+    this.mes+=d;
+    if(this.mes>11){this.mes=0;this.ano++;}
+    if(this.mes<0){this.mes=11;this.ano--;}
+    this.diaSel=null; this.render();
+    document.getElementById('prof-dia-titulo').textContent='Selecione um dia';
+    document.getElementById('prof-dia-aulas').innerHTML='<div class="empty-state">Clique em um dia para ver as aulas.</div>';
+  },
+
+  render(){
+    const titulo=document.getElementById('cal-prof-titulo');
+    const grid=document.getElementById('cal-prof-grid');
+    if(!titulo||!grid) return;
+    titulo.textContent=meses[this.mes]+' '+this.ano;
+    const hoje=new Date();
+    const prim=new Date(this.ano,this.mes,1).getDay();
+    const total=new Date(this.ano,this.mes+1,0).getDate();
+    let h='';
+    ['D','S','T','Q','Q','S','S'].forEach(d=>{h+=`<div class="cal-sdow">${d}</div>`;});
+    for(let i=0;i<prim;i++) h+='<div class="cal-sday vazio-mark"></div>';
+    for(let d=1;d<=total;d++){
+      const data=new Date(this.ano,this.mes,d);
+      const isHoje=data.toDateString()===hoje.toDateString();
+      const isSel=d===this.diaSel;
+      const temAula=aulasProf.some(a=>a.dia===d&&a.mes===this.mes&&a.ano===this.ano);
+      let cls='cal-sday clicavel';
+      if(isHoje) cls+=' hoje-mark';
+      if(isSel) cls+=' selecionado';
+      if(temAula) cls+=' tem-aula';
+      h+=`<div class="${cls}" onclick="calProf.selecionarDia(${d})">${d}</div>`;
+    }
+    grid.innerHTML=h;
+  },
+
+  selecionarDia(d){
+    this.diaSel=d; this.render();
+    const nd=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    const wd=new Date(this.ano,this.mes,d).getDay();
+    document.getElementById('prof-dia-titulo').textContent=`${nd[wd]}, ${d} de ${meses[this.mes]}`;
+    const aulas=aulasProf.filter(a=>a.dia===d&&a.mes===this.mes&&a.ano===this.ano)
+      .sort((a,b)=>a.horario.localeCompare(b.horario));
+    const cores={'Matemática':'sa-mat','Língua Portuguesa':'sa-port','Coordenação Motora Fina':'sa-coord'};
+    const el=document.getElementById('prof-dia-aulas');
+    if(aulas.length===0){
+      el.innerHTML='<div class="empty-state">Nenhuma aula neste dia.</div>'; return;
+    }
+    el.innerHTML=aulas.map(a=>`
+      <div class="aula-dia-item">
+        <div class="aula-dia-hora">${a.horario}</div>
+        <div class="aula-dia-info">
+          <div class="aula-dia-nome">${a.nome}</div>
+          <div class="aula-dia-meta">${a.serie} · ${a.materia}</div>
+        </div>
+        <span class="aula-dia-mat ${cores[a.materia]||'sa-mat'}">${a.materia.split(' ')[0]}</span>
+      </div>`).join('');
+  }
+};
 
 async function carregarSolicitacoes(){
   const {db,collection,query,where,getDocs,doc,updateDoc}=window._fb;
