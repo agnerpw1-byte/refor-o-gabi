@@ -46,10 +46,20 @@
     if (user) {
       if (user.email === EMAIL_PROF) {
         go("prof");
-        setTimeout(() => { carregarAgenda(); carregarSolicitacoes(); }, 100);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            carregarAgenda();
+            carregarSolicitacoes();
+          });
+        });
       } else {
         go("aluno");
-        setTimeout(() => { carregarAulasAluno(user.uid); carregarMateriaisAluno(user.uid); }, 100);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            carregarAulasAluno(user.uid);
+            carregarMateriaisAluno(user.uid);
+          });
+        });
       }
     }
   });
@@ -902,7 +912,7 @@ async function carregarAulasAluno(uid){
     aulasAluno=[];
     snap.forEach(d=>{ aulasAluno.push({id:d.id,...d.data()}); });
   }catch(e){ console.error(e); }
-  setTimeout(()=>calAluno.render(), 50);
+  calAluno.render();
 }
 
 // Calendário do aluno
@@ -924,7 +934,7 @@ const calAluno = {
   render(){
     const titulo=document.getElementById('cal-aluno-titulo');
     const grid=document.getElementById('cal-aluno-grid');
-    if(!titulo||!grid){ setTimeout(()=>this.render(),80); return; }
+    if(!titulo||!grid) return;
     titulo.textContent=meses[this.mes]+' '+this.ano;
     const hoje=new Date();
     const amanha=new Date(hoje); amanha.setDate(hoje.getDate()+1);
