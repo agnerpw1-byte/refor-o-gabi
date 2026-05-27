@@ -523,24 +523,12 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
           <p style="font-family:var(--serif);font-size:16px;font-weight:400;margin-bottom:.2rem;" id="hor-titulo-new"></p>
           <p style="font-size:12px;font-weight:300;color:var(--ink3);margin-bottom:1rem;">Escolha o horário que melhor encaixa na sua rotina:</p>
 
-          <p style="font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;">Manhã · 08h00 às 10h00</p>
-          <div class="hor-grid" style="margin-bottom:1rem;">
-            <button class="hor-btn" onclick="selecionarHor('08h00')">08h00</button>
-            <button class="hor-btn" onclick="selecionarHor('08h30')">08h30</button>
-            <button class="hor-btn" onclick="selecionarHor('09h00')">09h00</button>
-            <button class="hor-btn" onclick="selecionarHor('09h30')">09h30</button>
-            <button class="hor-btn" onclick="selecionarHor('10h00')">10h00</button>
-          </div>
-
-          <p style="font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;">Tarde · 14h00 às 17h00</p>
-          <div class="hor-grid" style="margin-bottom:1rem;">
-            <button class="hor-btn" onclick="selecionarHor('14h00')">14h00</button>
-            <button class="hor-btn" onclick="selecionarHor('14h30')">14h30</button>
-            <button class="hor-btn" onclick="selecionarHor('15h00')">15h00</button>
-            <button class="hor-btn" onclick="selecionarHor('15h30')">15h30</button>
-            <button class="hor-btn" onclick="selecionarHor('16h00')">16h00</button>
-            <button class="hor-btn" onclick="selecionarHor('16h30')">16h30</button>
-            <button class="hor-btn" onclick="selecionarHor('17h00')">17h00</button>
+          <div id="pub-horas-carregando" style="font-size:13px;font-weight:300;color:var(--ink3);padding:.5rem 0;">Verificando horários disponíveis...</div>
+          <div id="pub-horas-wrap" style="display:none;">
+            <p style="font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;">Manhã · 08h00 às 10h00</p>
+            <div class="hor-grid" style="margin-bottom:1rem;" id="pub-horas-manha"></div>
+            <p style="font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;">Tarde · 14h00 às 17h00</p>
+            <div class="hor-grid" style="margin-bottom:1rem;" id="pub-horas-tarde"></div>
           </div>
         </div>
 
@@ -824,25 +812,50 @@ function go(p){
 const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 let diaSemSel=null, diaSemNome='', horSel=null;
 
-function selecionarDiaSemana(num, nome){
+async function selecionarDiaSemana(num, nome){
   diaSemSel=num; diaSemNome=nome; horSel=null;
-  // Highlight botão selecionado
-  document.querySelectorAll('.dia-semana-btn').forEach(b=>{
-    b.classList.toggle('sel', b.textContent===nome);
+  document.querySelectorAll('#pg-agendar .dia-semana-btn').forEach(b=>{
+    b.classList.toggle('sel', b.textContent.trim()===nome);
   });
-  // Mostrar seção de horários
   document.getElementById('hor-section').style.display='block';
   document.getElementById('hor-titulo-new').textContent=nome;
-  document.querySelectorAll('.hor-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('ag-form').style.display='none';
   document.getElementById('resumo-ag').style.display='none';
   document.getElementById('ag-ok').style.display='none';
   document.getElementById('ag-erro').style.display='none';
+  document.getElementById('pub-horas-carregando').style.display='block';
+  document.getElementById('pub-horas-wrap').style.display='none';
+
+  // Busca horários ocupados no Firebase
+  const {db,collection,query,where,getDocs}=window._fb;
+  let ocupados=[];
+  try{
+    const q=query(collection(db,'solicitacoes'),where('diaSemana','==',num));
+    const snap=await getDocs(q);
+    snap.forEach(doc=>{
+      const d=doc.data();
+      if(d.status!=='recusada') ocupados.push(d.horario);
+    });
+  }catch(e){ console.error(e); }
+
+  document.getElementById('pub-horas-carregando').style.display='none';
+  document.getElementById('pub-horas-wrap').style.display='block';
+
+  const horasManha=['08h00','08h30','09h00','09h30','10h00'];
+  const horasTarde=['14h00','14h30','15h00','15h30','16h00','16h30','17h00'];
+
+  const btnHora=(h)=>{
+    const isOcup=ocupados.includes(h);
+    const cls='hor-btn'+(isOcup?' ocupado':'');
+    return `<button class="${cls}" ${isOcup?'disabled':''} onclick="selecionarHor('${h}')">${h}</button>`;
+  };
+  document.getElementById('pub-horas-manha').innerHTML=horasManha.map(btnHora).join('');
+  document.getElementById('pub-horas-tarde').innerHTML=horasTarde.map(btnHora).join('');
 }
 
 function selecionarHor(h){
   horSel=h;
-  document.querySelectorAll('.hor-btn').forEach(b=>b.classList.toggle('sel',b.textContent===h));
+  document.querySelectorAll('#pub-horas-manha .hor-btn, #pub-horas-tarde .hor-btn').forEach(b=>b.classList.toggle('sel',b.textContent===h));
   const r=document.getElementById('resumo-ag');
   r.innerHTML=`<strong>Horário fixo escolhido</strong>${diaSemNome} · ${h} toda semana`;
   r.style.display='block';
@@ -1238,6 +1251,16 @@ async function responderSol(id, status){
   }
 }
 
+async function removerAluno(alunoId, nome){
+  if(!confirm(`Remover ${nome} da lista de alunos? Esta ação não pode ser desfeita.`)) return;
+  const {db,doc,updateDoc}=window._fb;
+  try{
+    await updateDoc(doc(db,'alunos',alunoId),{status:'inativo'});
+    alert(`${nome} foi removido com sucesso.`);
+    carregarListaAlunos();
+  }catch(e){ alert('Erro ao remover aluno.'); }
+}
+
 async function editarHorario(alunoId, diaAtual, horAtual){
   const diasNomes=['','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira'];
   const novoHor = prompt(`Horário atual: ${diaAtual} · ${horAtual}\n\nDigite o novo horário (ex: 09h00, 14h30):`, horAtual);
@@ -1277,7 +1300,10 @@ async function carregarListaAlunos(){
         <span style="font-size:12px;font-weight:300;color:var(--ink3);">${a.serie}</span>
         <span style="font-size:12px;font-weight:300;color:var(--ink3);">${a.materia}</span>
         <span style="font-size:11px;font-weight:300;color:var(--ink3);">${a.diaSemanaNome||'—'}<br>${a.horario||'—'}</span>
-        <button onclick="editarHorario('${d.id}','${a.diaSemanaNome||''}','${a.horario||''}')" style="font-size:11px;font-weight:400;padding:4px 8px;border-radius:2px;border:1px solid var(--paper3);background:transparent;cursor:pointer;color:var(--ink3);font-family:var(--sans);transition:all var(--tr);" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--paper3)';this.style.color='var(--ink3)'"><i class="ti ti-pencil"></i> Editar</button>
+        <div style="display:flex;gap:5px;">
+          <button onclick="editarHorario('${d.id}','${a.diaSemanaNome||''}','${a.horario||''}')" style="font-size:11px;font-weight:400;padding:4px 8px;border-radius:2px;border:1px solid var(--paper3);background:transparent;cursor:pointer;color:var(--ink3);font-family:var(--sans);" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--paper3)';this.style.color='var(--ink3)'"><i class="ti ti-pencil"></i></button>
+          <button onclick="removerAluno('${d.id}','${a.nome}')" style="font-size:11px;font-weight:400;padding:4px 8px;border-radius:2px;border:1px solid var(--red-light);background:transparent;cursor:pointer;color:var(--red);font-family:var(--sans);" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--red)'"><i class="ti ti-trash"></i></button>
+        </div>
       </div>`;
     });
     el.innerHTML=h;
