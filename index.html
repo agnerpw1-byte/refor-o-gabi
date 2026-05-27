@@ -17,7 +17,7 @@
     GoogleAuthProvider, signInWithPopup }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc,
-    query, orderBy, where, serverTimestamp }
+    query, orderBy, where, serverTimestamp, onSnapshot }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -41,7 +41,7 @@
   window._fb = { auth, db, signInWithEmailAndPassword, signOut,
     onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
     collection, addDoc, getDocs, getDoc, doc, updateDoc,
-    query, orderBy, where, serverTimestamp, EMAIL_PROF };
+    query, orderBy, where, serverTimestamp, onSnapshot, EMAIL_PROF };
 
   // Observa autenticação ao carregar
   onAuthStateChanged(auth, user => {
@@ -63,8 +63,7 @@
           carregarAulasAluno(user.uid);
           carregarMateriaisAluno(user.uid);
         }));
-        // Render calendar after data loads
-        setTimeout(()=>calAluno.render(), 800);
+
       }
     }
   });
@@ -1070,18 +1069,24 @@ function trocarTabAluno(t,el){
   if(t==='agenda') setTimeout(()=>calAluno.render(),50);
 }
 
-let aulasAlunoUid='', aulasDoAluno=[];
+let aulasAlunoUid='', aulasDoAluno=[], _unsubAluno=null;
 
 async function carregarAulasAluno(uid){
   aulasAlunoUid=uid;
-  const {db,collection,query,where,getDocs}=window._fb;
-  try{
-    const q=query(collection(db,'solicitacoes'),where('alunoUid','==',uid));
-    const snap=await getDocs(q);
+  // Cancela listener anterior se existir
+  if(_unsubAluno) _unsubAluno();
+
+  const {db,collection,query,where,onSnapshot}=window._fb;
+  const q=query(collection(db,'solicitacoes'),where('alunoUid','==',uid));
+
+  // Listener em tempo real — atualiza calendário automaticamente
+  _unsubAluno = onSnapshot(q, (snap)=>{
     aulasDoAluno=[];
     snap.forEach(d=>{ aulasDoAluno.push({id:d.id,...d.data()}); });
-  }catch(e){ console.error(e); }
-  requestAnimationFrame(()=>requestAnimationFrame(()=>calAluno.render()));
+    calAluno.render();
+    // Se um dia estiver selecionado, atualiza o painel lateral também
+    if(calAluno.diaSel) calAluno.selecionarDia(calAluno.diaSel);
+  }, (e)=>console.error('onSnapshot aluno:', e));
 }
 
 // Calendário do aluno — mostra aulas confirmadas/pendentes
@@ -1325,11 +1330,14 @@ async function carregarMateriaisAluno(uid){
 // ══ PAINEL PROFESSORA ══
 let aulasProf=[];
 
+let _unsubProf=null;
+
 async function carregarAgenda(){
-  const {db,collection,query,where,getDocs}=window._fb;
-  try{
-    // Carrega confirmadas E pendentes para mostrar no calendário
-    const snap=await getDocs(collection(db,'solicitacoes'));
+  if(_unsubProf) _unsubProf();
+  const {db,collection,onSnapshot}=window._fb;
+
+  // Listener em tempo real para a agenda da professora
+  _unsubProf = onSnapshot(collection(db,'solicitacoes'), (snap)=>{
     aulasProf=[];
     snap.forEach(d=>{
       const data=d.data();
@@ -1337,8 +1345,17 @@ async function carregarAgenda(){
         aulasProf.push({id:d.id,...data});
       }
     });
-  }catch(e){ console.error('carregarAgenda erro:',e); }
-  calProf.render();
+    calProf.render();
+    // Atualiza painel lateral se dia selecionado
+    if(calProf.diaSel) calProf.selecionarDia(calProf.diaSel);
+    // Atualiza badges de solicitações
+    const pendentes=aulasProf.filter(a=>a.status==='pendente').length;
+    const b1=document.getElementById('badge-solicitacoes');
+    const b2=document.getElementById('badge-sol2');
+    if(b1) b1.textContent=pendentes;
+    if(b2) b2.textContent=pendentes;
+  }, (e)=>console.error('onSnapshot prof:', e));
+
   carregarListaAlunos();
 }
 
@@ -1437,10 +1454,6 @@ async function carregarSolicitacoes(){
   try{
     const q=query(collection(db,'solicitacoes'),where('status','==','pendente'));
     const snap=await getDocs(q);
-    const badge1=document.getElementById('badge-solicitacoes');
-    const badge2=document.getElementById('badge-sol2');
-    const count=snap.size;
-    badge1.textContent=count; badge2.textContent=count;
     if(snap.empty){el.innerHTML='<div class="empty-state" style="padding:1rem;">Nenhuma solicitação pendente.</div>';return;}
     let h='';
     snap.forEach(d=>{
