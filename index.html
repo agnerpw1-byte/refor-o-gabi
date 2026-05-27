@@ -1054,30 +1054,51 @@ async function carregarAulasAluno(uid){
   // Nada a pré-carregar — horários são buscados ao selecionar dia
 }
 
-// Agendamento do aluno por dia da semana
+// Agendamento do aluno — acumula seleções por dia da semana
+// selecoes = { 1: ['14h00'], 3: ['14h00','15h00'], ... }
 const agAluno = {
   diaSemana: null,
   diaSemanaNome: '',
-  horSel: [],
+  selecoes: {}, // acumula horários por dia da semana
+
+  atualizarResumo(){
+    const total=Object.values(this.selecoes).flat().length;
+    const btn=document.getElementById('ag-aluno-sel-btn');
+    if(!btn) return;
+    if(total>0){
+      const linhas=Object.entries(this.selecoes)
+        .filter(([,horas])=>horas.length>0)
+        .map(([dia,horas])=>{
+          const nomes=['','Segunda','Terça','Quarta','Quinta','Sexta'];
+          return `${nomes[dia]}: ${horas.sort().join(', ')}`;
+        });
+      btn.innerHTML=`<button class="btn btn-dark" style="width:100%;" onclick="agAluno.mostrarForm()">
+        Confirmar ${total} horário${total>1?'s':''} selecionado${total>1?'s':''}<br>
+        <span style="font-size:11px;font-weight:300;opacity:.7;">${linhas.join(' · ')}</span>
+      </button>`;
+      btn.style.display='block';
+    } else {
+      btn.style.display='none';
+    }
+  },
 
   async selecionarDia(num, nome){
-    this.diaSemana=num; this.diaSemanaNome=nome; this.horSel=[];
+    this.diaSemana=num; this.diaSemanaNome=nome;
+    if(!this.selecoes[num]) this.selecoes[num]=[];
 
-    // Highlight botão
-    document.querySelectorAll('.dia-semana-btn').forEach(b=>{
+    // Highlight botão selecionado
+    document.querySelectorAll('#pg-aluno .dia-semana-btn').forEach(b=>{
       b.classList.toggle('sel', b.textContent.trim()===nome);
     });
 
     // Mostrar lado direito
-    const lado=document.getElementById('ag-aluno-lado');
-    lado.style.display='block';
+    document.getElementById('ag-aluno-lado').style.display='block';
     document.getElementById('ag-aluno-dia-label').textContent=nome;
     document.getElementById('ag-aluno-carregando').style.display='block';
     document.getElementById('ag-aluno-horas').style.display='none';
     document.getElementById('ag-aluno-form').style.display='none';
-    document.getElementById('ag-aluno-sel-btn').style.display='none';
 
-    // Busca horários já ocupados nesse dia da semana (confirmados ou pendentes)
+    // Busca horários já ocupados nesse dia da semana
     const {db,collection,query,where,getDocs}=window._fb;
     let ocupados=[];
     try{
@@ -1094,32 +1115,44 @@ const agAluno = {
 
     const horasManha=['08h00','09h00','10h00'];
     const horasTarde=['14h00','15h00','16h00','17h00'];
+    const jaSel=this.selecoes[num]||[];
 
     const btnHora=(h)=>{
       const isOcup=ocupados.includes(h);
-      const cls='hora-btn'+(isOcup?' ocupado':'');
+      const isSel=jaSel.includes(h);
+      let cls='hora-btn'+(isOcup?' ocupado':isSel?' sel':'');
       return `<button class="${cls}" ${isOcup?'disabled':''} onclick="agAluno.toggleHora('${h}')">${h}</button>`;
     };
 
     document.getElementById('horas-manha').innerHTML=horasManha.map(btnHora).join('');
     document.getElementById('horas-tarde').innerHTML=horasTarde.map(btnHora).join('');
+    this.atualizarResumo();
   },
 
   toggleHora(h){
-    const idx=this.horSel.indexOf(h);
-    if(idx>=0) this.horSel.splice(idx,1);
-    else this.horSel.push(h);
-    // Update visual — match only available buttons
+    const dia=this.diaSemana;
+    if(!this.selecoes[dia]) this.selecoes[dia]=[];
+    const idx=this.selecoes[dia].indexOf(h);
+    if(idx>=0) this.selecoes[dia].splice(idx,1);
+    else this.selecoes[dia].push(h);
+    // Limpa dias sem horários
+    if(this.selecoes[dia].length===0) delete this.selecoes[dia];
+    // Atualiza visual do botão
     document.querySelectorAll('#ag-aluno-horas .hora-btn:not(.ocupado)').forEach(b=>{
-      if(b.textContent.trim()===h) b.classList.toggle('sel', this.horSel.includes(h));
+      if(b.textContent.trim()===h) b.classList.toggle('sel', (this.selecoes[dia]||[]).includes(h));
     });
-    const btn=document.getElementById('ag-aluno-sel-btn');
-    if(btn) btn.style.display=this.horSel.length>0?'block':'none';
+    this.atualizarResumo();
   },
 
   mostrarForm(){
+    const total=Object.values(this.selecoes).flat().length;
+    if(total===0) return;
+    const nomes=['','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira'];
+    const linhas=Object.entries(this.selecoes)
+      .filter(([,h])=>h.length>0)
+      .map(([dia,horas])=>`${nomes[dia]}: ${horas.sort().join(', ')}`);
     const resumo=document.getElementById('ag-aluno-resumo');
-    resumo.innerHTML=`<strong>${this.diaSemanaNome} — horários selecionados</strong>${this.horSel.sort().join(' · ')} (todas as semanas)`;
+    resumo.innerHTML=`<strong>Horários selecionados (toda semana)</strong>${linhas.join('<br>')}`;
     document.getElementById('ag-aluno-form').style.display='block';
     document.getElementById('ag-aluno-sel-btn').style.display='none';
   },
@@ -1131,33 +1164,38 @@ const agAluno = {
     const mat=document.getElementById('ag-aluno-mat')?.value;
     const erro=document.getElementById('ag-aluno-erro');
     const ok=document.getElementById('ag-aluno-ok');
-    if(!nome||!serie||!wpp||!mat||this.horSel.length===0){
+    const total=Object.values(this.selecoes).flat().length;
+    if(!nome||!serie||!wpp||!mat||total===0){
       erro.textContent='Preencha todos os campos e selecione ao menos um horário.';
       erro.style.display='block'; return;
     }
     erro.style.display='none';
     try{
       const {db,collection,addDoc,serverTimestamp}=window._fb;
-      for(const h of this.horSel){
-        await addDoc(collection(db,'solicitacoes'),{
-          nome, serie, whatsapp:wpp, materia:mat,
-          diaSemana:this.diaSemana,
-          diaSemanaNome:this.diaSemanaNome,
-          horario:h,
-          tipo:'semanal',
-          alunoUid:aulasAlunoUid||'',
-          status:'pendente',
-          criadoEm:serverTimestamp()
-        });
+      const nomes=['','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira'];
+      for(const [dia, horas] of Object.entries(this.selecoes)){
+        for(const h of horas){
+          await addDoc(collection(db,'solicitacoes'),{
+            nome, serie, whatsapp:wpp, materia:mat,
+            diaSemana:parseInt(dia),
+            diaSemanaNome:nomes[dia],
+            horario:h,
+            tipo:'semanal',
+            alunoUid:aulasAlunoUid||'',
+            status:'pendente',
+            criadoEm:serverTimestamp()
+          });
+        }
       }
       ok.textContent='Solicitação enviada! A professora confirmará em breve pelo WhatsApp.';
       ok.style.display='block';
       document.getElementById('ag-aluno-form').style.display='none';
       document.getElementById('ag-aluno-horas').style.display='none';
-      document.getElementById('ag-aluno-sel-btn').style.display='none';
-      // Reset
-      this.horSel=[]; this.diaSemana=null;
-      document.querySelectorAll('.dia-semana-btn').forEach(b=>b.classList.remove('sel'));
+      document.getElementById('ag-aluno-lado').style.display='none';
+      // Reset completo
+      this.selecoes={}; this.diaSemana=null;
+      document.querySelectorAll('#pg-aluno .dia-semana-btn').forEach(b=>b.classList.remove('sel'));
+      this.atualizarResumo();
     }catch(e){
       erro.textContent='Erro ao enviar. Tente novamente.';
       erro.style.display='block';
