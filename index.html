@@ -161,6 +161,10 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 .hor-btn:hover{border-color:var(--sage);color:var(--sage);}
 .hor-btn.sel{background:var(--sage);border-color:var(--sage);color:#fff;}
 .hor-btn.ocupado{background:var(--paper3);color:var(--paper3);cursor:default;border-color:var(--paper3);}
+.dia-semana-btn{font-family:var(--sans);font-size:13px;font-weight:400;padding:10px 16px;text-align:left;border-radius:3px;background:var(--paper2);border:1px solid var(--paper3);cursor:pointer;transition:all var(--tr);color:var(--ink2);display:flex;align-items:center;justify-content:space-between;}
+.dia-semana-btn:hover{border-color:var(--sage);color:var(--sage);}
+.dia-semana-btn.sel{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+.dia-semana-btn.sel::after{content:'✓';font-size:12px;}
 .hor-placeholder{font-size:13px;font-weight:300;color:var(--ink3);padding:1.25rem;background:var(--paper2);border-radius:6px;text-align:center;}
 .hor-titulo{font-family:var(--serif);font-size:16px;font-weight:400;margin-bottom:.2rem;}
 .hor-sub{font-size:12px;font-weight:300;color:var(--ink3);margin-bottom:1rem;}
@@ -441,27 +445,54 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 <!-- ══ AGENDAR ══ -->
 <div class="pg" id="pg-agendar">
   <div class="sec" style="border-bottom:none;">
-    <span class="sec-ey">Agendamento</span>
-    <h2 class="sec-t">Escolha seu horário</h2>
-    <p class="sec-sub">Selecione o dia e o horário. A professora confirma em até 2 horas pelo WhatsApp.</p>
-    <div class="agenda-wrap">
+    <span class="sec-ey">Agendamento semanal</span>
+    <h2 class="sec-t">Escolha seu dia e horário fixo</h2>
+    <p class="sec-sub">As aulas são semanais — você escolhe o dia da semana e o horário, e esse será seu horário fixo toda semana. A professora confirma em até 2 horas pelo WhatsApp.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;" id="ag-wrap">
+      <!-- PASSO 1: DIA DA SEMANA -->
       <div>
-        <div class="cal-box">
-          <div class="cal-header">
-            <button class="cal-nav" onclick="mudarMes(-1)">‹</button>
-            <span class="cal-mes" id="cal-titulo"></span>
-            <button class="cal-nav" onclick="mudarMes(1)">›</button>
-          </div>
-          <div class="cal-grid-wrap" id="cal-grid"></div>
+        <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.85rem;">Passo 1 — Dia da semana</p>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="dias-semana-grid">
+          <button class="dia-semana-btn" onclick="selecionarDiaSemana(1,'Segunda-feira')">Segunda-feira</button>
+          <button class="dia-semana-btn" onclick="selecionarDiaSemana(2,'Terça-feira')">Terça-feira</button>
+          <button class="dia-semana-btn" onclick="selecionarDiaSemana(3,'Quarta-feira')">Quarta-feira</button>
+          <button class="dia-semana-btn" onclick="selecionarDiaSemana(4,'Quinta-feira')">Quinta-feira</button>
+          <button class="dia-semana-btn" onclick="selecionarDiaSemana(5,'Sexta-feira')">Sexta-feira</button>
         </div>
-        <p style="font-size:11px;font-weight:300;color:var(--ink3);margin-top:.5rem;padding-left:.5rem;"><span style="color:var(--sage);">·</span> dias com horários disponíveis</p>
+        <p style="font-size:11px;font-weight:300;color:var(--ink3);margin-top:.75rem;"><i class="ti ti-info-circle"></i> Atendimento somente de segunda a sexta</p>
       </div>
+
+      <!-- PASSO 2: HORÁRIO + FORMULÁRIO -->
       <div>
-        <div class="hor-titulo" id="hor-titulo">Selecione um dia</div>
-        <div class="hor-sub" id="hor-sub">Clique em uma data disponível no calendário</div>
-        <div id="hor-grid-wrap"><div class="hor-placeholder"><i class="ti ti-calendar"></i><br><br>Escolha uma data para ver os horários</div></div>
+        <div id="hor-section" style="display:none;">
+          <p style="font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.85rem;">Passo 2 — Horário fixo</p>
+          <p style="font-family:var(--serif);font-size:16px;font-weight:400;margin-bottom:.2rem;" id="hor-titulo-new"></p>
+          <p style="font-size:12px;font-weight:300;color:var(--ink3);margin-bottom:1rem;">Escolha o horário que melhor encaixa na sua rotina:</p>
+
+          <p style="font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;">Manhã · 08h00 às 10h00</p>
+          <div class="hor-grid" style="margin-bottom:1rem;">
+            <button class="hor-btn" onclick="selecionarHor('08h00')">08h00</button>
+            <button class="hor-btn" onclick="selecionarHor('08h30')">08h30</button>
+            <button class="hor-btn" onclick="selecionarHor('09h00')">09h00</button>
+            <button class="hor-btn" onclick="selecionarHor('09h30')">09h30</button>
+            <button class="hor-btn" onclick="selecionarHor('10h00')">10h00</button>
+          </div>
+
+          <p style="font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;">Tarde · 14h00 às 17h00</p>
+          <div class="hor-grid" style="margin-bottom:1rem;">
+            <button class="hor-btn" onclick="selecionarHor('14h00')">14h00</button>
+            <button class="hor-btn" onclick="selecionarHor('14h30')">14h30</button>
+            <button class="hor-btn" onclick="selecionarHor('15h00')">15h00</button>
+            <button class="hor-btn" onclick="selecionarHor('15h30')">15h30</button>
+            <button class="hor-btn" onclick="selecionarHor('16h00')">16h00</button>
+            <button class="hor-btn" onclick="selecionarHor('16h30')">16h30</button>
+            <button class="hor-btn" onclick="selecionarHor('17h00')">17h00</button>
+          </div>
+        </div>
+
         <div class="ag-form" id="ag-form" style="display:none;">
-          <div class="ag-form-t">Confirmar solicitação</div>
+          <div class="ag-form-t">Passo 3 — Seus dados</div>
           <div class="resumo-ag" id="resumo-ag"></div>
           <div class="ff2">
             <div class="ff"><label>Nome do aluno</label><input type="text" id="ag-nome" placeholder="Nome completo"></div>
@@ -479,8 +510,8 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
             </div>
           </div>
           <button class="btn btn-dark" style="width:100%;margin-top:4px;" onclick="enviarSolicitacao()">Enviar solicitação</button>
-          <p class="msg-erro" id="ag-erro">Preencha todos os campos para continuar.</p>
-          <p class="msg-ok" id="ag-ok">Solicitação enviada! A professora confirmará em até 2 horas pelo WhatsApp.</p>
+          <p class="msg-erro" id="ag-erro" style="display:none;"></p>
+          <p class="msg-ok" id="ag-ok" style="display:none;"></p>
         </div>
       </div>
     </div>
@@ -659,46 +690,20 @@ function go(p){
   if(el) el.classList.add('on');
 }
 
-// ══ CALENDÁRIO ══
-let calAno=new Date().getFullYear(), calMes=new Date().getMonth(), diaSel=null, horSel=null;
-const diasComVaga=[2,4,5,9,11,12,16,18,19,23,25,26];
-const horariosBase=['13h00','14h00','14h30','15h00','16h00','17h00','18h00'];
-const horariosOcupados={'2':['14h00'],'4':['13h00','15h00'],'9':['14h30','16h00'],'16':['13h00','17h00']};
+// ══ AGENDAMENTO SEMANAL ══
 const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const dows=['D','S','T','Q','Q','S','S'];
+let diaSemSel=null, diaSemNome='', horSel=null;
 
-function renderCal(){
-  document.getElementById('cal-titulo').textContent=meses[calMes]+' '+calAno;
-  const grid=document.getElementById('cal-grid');
-  let h='';
-  dows.forEach(d=>{h+=`<div class="cal-dow">${d}</div>`;});
-  const prim=new Date(calAno,calMes,1).getDay();
-  const total=new Date(calAno,calMes+1,0).getDate();
-  const hoje=new Date();
-  for(let i=0;i<prim;i++) h+=`<div class="cal-day vazio"></div>`;
-  for(let d=1;d<=total;d++){
-    const past=new Date(calAno,calMes,d)<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
-    const temV=diasComVaga.includes(d);
-    const isH=d===hoje.getDate()&&calMes===hoje.getMonth()&&calAno===hoje.getFullYear();
-    let cls='cal-day'+(past?' passado':temV?' tem-vaga':'')+(isH?' hoje':'')+(d===diaSel?' selecionado':'');
-    const clk=(!past&&temV)?`onclick="selecionarDia(${d})"`:'' ;
-    h+=`<div class="${cls}" ${clk}>${d}</div>`;
-  }
-  grid.innerHTML=h;
-}
-
-function selecionarDia(d){
-  diaSel=d; horSel=null; renderCal();
-  const nd=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  document.getElementById('hor-titulo').textContent=nd[new Date(calAno,calMes,d).getDay()]+', '+d+' de '+meses[calMes];
-  document.getElementById('hor-sub').textContent='Horários disponíveis — selecione um:';
-  const ocup=(horariosOcupados[String(d)]||[]);
-  let h='<div class="hor-grid">';
-  horariosBase.forEach(hor=>{
-    const isO=ocup.includes(hor);
-    h+=`<button class="hor-btn${isO?' ocupado':''}" ${isO?'disabled':''} onclick="selecionarHor('${hor}')">${hor}</button>`;
+function selecionarDiaSemana(num, nome){
+  diaSemSel=num; diaSemNome=nome; horSel=null;
+  // Highlight botão selecionado
+  document.querySelectorAll('.dia-semana-btn').forEach(b=>{
+    b.classList.toggle('sel', b.textContent===nome);
   });
-  document.getElementById('hor-grid-wrap').innerHTML=h+'</div>';
+  // Mostrar seção de horários
+  document.getElementById('hor-section').style.display='block';
+  document.getElementById('hor-titulo-new').textContent=nome;
+  document.querySelectorAll('.hor-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('ag-form').style.display='none';
   document.getElementById('resumo-ag').style.display='none';
   document.getElementById('ag-ok').style.display='none';
@@ -709,20 +714,9 @@ function selecionarHor(h){
   horSel=h;
   document.querySelectorAll('.hor-btn').forEach(b=>b.classList.toggle('sel',b.textContent===h));
   const r=document.getElementById('resumo-ag');
-  r.innerHTML=`<strong>Resumo</strong>${diaSel} de ${meses[calMes]} de ${calAno} · ${h} · 1 hora`;
+  r.innerHTML=`<strong>Horário fixo escolhido</strong>${diaSemNome} · ${h} toda semana`;
   r.style.display='block';
   document.getElementById('ag-form').style.display='block';
-}
-
-function mudarMes(d){
-  calMes+=d;
-  if(calMes>11){calMes=0;calAno++;}
-  if(calMes<0){calMes=11;calAno--;}
-  diaSel=null; horSel=null; renderCal();
-  document.getElementById('hor-titulo').textContent='Selecione um dia';
-  document.getElementById('hor-sub').textContent='Clique em uma data disponível no calendário';
-  document.getElementById('hor-grid-wrap').innerHTML='<div class="hor-placeholder"><i class="ti ti-calendar"></i><br><br>Escolha uma data para ver os horários</div>';
-  document.getElementById('ag-form').style.display='none';
 }
 
 async function enviarSolicitacao(){
@@ -732,22 +726,27 @@ async function enviarSolicitacao(){
   const mat=document.getElementById('ag-mat').value;
   const erro=document.getElementById('ag-erro');
   const ok=document.getElementById('ag-ok');
-  if(!nome||!serie||!wpp||!mat||!diaSel||!horSel){
-    erro.textContent='Preencha todos os campos e selecione dia e horário.';
+  if(!nome||!serie||!wpp||!mat||!diaSemSel||!horSel){
+    erro.textContent='Preencha todos os campos, selecione o dia e o horário.';
     erro.style.display='block'; ok.style.display='none'; return;
   }
   erro.style.display='none';
   try{
     const {db,collection,addDoc,serverTimestamp}=window._fb;
     await addDoc(collection(db,'solicitacoes'),{
-      nome,serie,whatsapp:wpp,materia:mat,
-      dia:diaSel,mes:calMes,ano:calAno,horario:horSel,
+      nome, serie, whatsapp:wpp, materia:mat,
+      diaSemana:diaSemSel, diaSemanaNome:diaSemNome,
+      horario:horSel,
+      tipo:'semanal',
       status:'pendente',
       criadoEm:serverTimestamp()
     });
+    ok.textContent='Solicitação enviada! A professora confirmará em até 2 horas pelo WhatsApp.';
     ok.style.display='block';
     document.getElementById('ag-form').style.display='none';
-    document.getElementById('hor-grid-wrap').innerHTML='<div class="hor-placeholder"><i class="ti ti-check"></i><br><br>Solicitação enviada!</div>';
+    document.getElementById('hor-section').style.display='none';
+    document.querySelectorAll('.dia-semana-btn').forEach(b=>b.classList.remove('sel'));
+    diaSemSel=null; horSel=null;
   }catch(e){
     erro.textContent='Erro ao enviar. Tente novamente.';
     erro.style.display='block';
@@ -902,7 +901,7 @@ async function carregarSolicitacoes(){
         <div class="sol-avatar">${ini}</div>
         <div class="sol-info">
           <div class="sol-nome">${s.nome} · ${s.serie}</div>
-          <div class="sol-detalhe">${s.materia} · ${s.dia}/${s.mes+1} · ${s.horario}<br>WhatsApp: ${s.whatsapp}</div>
+          <div class="sol-detalhe">${s.materia} · ${s.diaSemanaNome||'Dia não informado'} · ${s.horario} (semanal)<br>Série: ${s.serie} · WhatsApp: ${s.whatsapp}</div>
           <div class="sol-btns">
             <button class="sb ok" onclick="responderSol('${id}','confirmada')"><i class="ti ti-check"></i> Confirmar</button>
             <button class="sb no" onclick="responderSol('${id}','recusada')"><i class="ti ti-x"></i> Recusar</button>
@@ -934,6 +933,27 @@ async function responderSol(id,status){
   }catch(e){alert('Erro ao atualizar solicitação.');}
 }
 
+async function editarHorario(alunoId, diaAtual, horAtual){
+  const diasNomes=['','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira'];
+  const novoHor = prompt(`Horário atual: ${diaAtual} · ${horAtual}\n\nDigite o novo horário (ex: 09h00, 14h30):`, horAtual);
+  if(!novoHor) return;
+  const novoDia = prompt(`Dia atual: ${diaAtual}\n\nDigite o novo dia da semana (Segunda, Terça, Quarta, Quinta ou Sexta):`, diaAtual);
+  if(!novoDia) return;
+  const diaNum = diasNomes.findIndex(d=>d.toLowerCase().startsWith(novoDia.toLowerCase().substring(0,4)));
+  try{
+    const {db,doc,updateDoc}=window._fb;
+    await updateDoc(doc(db,'alunos',alunoId),{
+      horario: novoHor.trim(),
+      diaSemanaNome: diaNum>0 ? diasNomes[diaNum] : novoDia,
+      diaSemana: diaNum>0 ? diaNum : null
+    });
+    alert('Horário atualizado com sucesso!');
+    carregarListaAlunos();
+  }catch(e){
+    alert('Erro ao atualizar horário. Tente novamente.');
+  }
+}
+
 async function carregarListaAlunos(){
   const {db,collection,getDocs}=window._fb;
   const el=document.getElementById('lista-alunos');
@@ -945,13 +965,14 @@ async function carregarListaAlunos(){
     snap.forEach(d=>{
       const a=d.data();
       const stCls=a.status==='ativo'?'background:var(--sage-light);color:var(--sage)':'background:var(--gold-light);color:#7a5c10';
-      h+=`<div style="display:grid;grid-template-columns:1.5fr 1fr 1.5fr 1fr;padding:.75rem 0;border-bottom:1px solid var(--paper3);align-items:center;">
+      h+=`<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 80px;padding:.75rem 0;border-bottom:1px solid var(--paper3);align-items:center;">
         <span style="font-size:13px;font-weight:400;display:flex;align-items:center;gap:8px;">
           <div style="width:27px;height:27px;background:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:12px;color:var(--gold2);">${a.nome.charAt(0)}</div>
           ${a.nome}</span>
         <span style="font-size:12px;font-weight:300;color:var(--ink3);">${a.serie}</span>
         <span style="font-size:12px;font-weight:300;color:var(--ink3);">${a.materia}</span>
-        <span style="font-size:10px;font-weight:400;${stCls};padding:2px 8px;border-radius:2px;display:inline-block;">${a.status||'ativo'}</span>
+        <span style="font-size:11px;font-weight:300;color:var(--ink3);">${a.diaSemanaNome||'—'}<br>${a.horario||'—'}</span>
+        <button onclick="editarHorario('${d.id}','${a.diaSemanaNome||''}','${a.horario||''}')" style="font-size:11px;font-weight:400;padding:4px 8px;border-radius:2px;border:1px solid var(--paper3);background:transparent;cursor:pointer;color:var(--ink3);font-family:var(--sans);transition:all var(--tr);" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--paper3)';this.style.color='var(--ink3)'"><i class="ti ti-pencil"></i> Editar</button>
       </div>`;
     });
     el.innerHTML=h;
@@ -1025,7 +1046,6 @@ function copiarPlano(){navigator.clipboard.writeText(planoGerado).then(()=>alert
 function novoPlano(){document.getElementById('ia-result').style.display='none';document.getElementById('ia-tema').value='';document.getElementById('ia-obs').value='';}
 
 // ══ INIT ══
-renderCal();
 const dNow=new Date();
 const diasSemana=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
 document.getElementById('prof-data-header').textContent=
