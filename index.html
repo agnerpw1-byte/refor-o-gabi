@@ -63,6 +63,8 @@
           carregarAulasAluno(user.uid);
           carregarMateriaisAluno(user.uid);
         }));
+        // Render calendar after data loads
+        setTimeout(()=>calAluno.render(), 800);
       }
     }
   });
@@ -654,12 +656,33 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 
     <!-- TABS ALUNO -->
     <div class="prof-tabs" style="margin-bottom:1.25rem;">
-      <button class="ptab on" onclick="trocarTabAluno('calendario',this)"><i class="ti ti-calendar"></i> Agendar aula</button>
-      <button class="ptab" onclick="trocarTabAluno('materiais',this)"><i class="ti ti-files"></i> Materiais</button>
+      <button class="ptab on" id="atab-btn-agenda" onclick="trocarTabAluno('agenda',this)"><i class="ti ti-calendar-event"></i> Minha agenda</button>
+      <button class="ptab" id="atab-btn-agendar" onclick="trocarTabAluno('calendario',this)"><i class="ti ti-plus"></i> Agendar aula</button>
+      <button class="ptab" id="atab-btn-materiais" onclick="trocarTabAluno('materiais',this)"><i class="ti ti-files"></i> Materiais</button>
+    </div>
+
+    <!-- TAB MINHA AGENDA -->
+    <div class="tab-pane on" id="atab-agenda">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+        <div class="cal-shared">
+          <div class="cal-shared-header">
+            <button class="cal-nav" onclick="calAluno.mudar(-1)">‹</button>
+            <span class="cal-shared-mes" id="cal-aluno-titulo"></span>
+            <button class="cal-nav" onclick="calAluno.mudar(1)">›</button>
+          </div>
+          <div class="cal-shared-grid" id="cal-aluno-grid"></div>
+        </div>
+        <div>
+          <div class="dash-bloco">
+            <div class="db-head"><i class="ti ti-clock"></i><h4 id="aluno-dia-titulo">Selecione um dia</h4></div>
+            <div class="db-body" id="aluno-dia-aulas"><div class="empty-state">Clique em um dia para ver suas aulas.</div></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- TAB AGENDAMENTO ALUNO -->
-    <div class="tab-pane on" id="atab-calendario">
+    <div class="tab-pane" id="atab-calendario">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
 
         <!-- DIAS DA SEMANA -->
@@ -1044,15 +1067,89 @@ function trocarTabAluno(t,el){
   panel.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('atab-'+t).classList.add('on');
-  // nada a renderizar no tab calendario — é estático
+  if(t==='agenda') setTimeout(()=>calAluno.render(),50);
 }
 
-let aulasAlunoUid='';
+let aulasAlunoUid='', aulasDoAluno=[];
 
 async function carregarAulasAluno(uid){
   aulasAlunoUid=uid;
-  // Nada a pré-carregar — horários são buscados ao selecionar dia
+  const {db,collection,query,where,getDocs}=window._fb;
+  try{
+    const q=query(collection(db,'solicitacoes'),where('alunoUid','==',uid));
+    const snap=await getDocs(q);
+    aulasDoAluno=[];
+    snap.forEach(d=>{ aulasDoAluno.push({id:d.id,...d.data()}); });
+  }catch(e){ console.error(e); }
+  requestAnimationFrame(()=>requestAnimationFrame(()=>calAluno.render()));
 }
+
+// Calendário do aluno — mostra aulas confirmadas/pendentes
+const calAluno = {
+  ano: new Date().getFullYear(),
+  mes: new Date().getMonth(),
+  diaSel: null,
+
+  mudar(d){
+    this.mes+=d;
+    if(this.mes>11){this.mes=0;this.ano++;}
+    if(this.mes<0){this.mes=11;this.ano--;}
+    this.diaSel=null; this.render();
+    document.getElementById('aluno-dia-titulo').textContent='Selecione um dia';
+    document.getElementById('aluno-dia-aulas').innerHTML='<div class="empty-state">Clique em um dia para ver suas aulas.</div>';
+  },
+
+  render(){
+    const titulo=document.getElementById('cal-aluno-titulo');
+    const grid=document.getElementById('cal-aluno-grid');
+    if(!titulo||!grid) return;
+    titulo.textContent=meses[this.mes]+' '+this.ano;
+    const hoje=new Date();
+    const prim=new Date(this.ano,this.mes,1).getDay();
+    const total=new Date(this.ano,this.mes+1,0).getDate();
+    let h='';
+    ['D','S','T','Q','Q','S','S'].forEach(dw=>{h+=`<div class="cal-sdow">${dw}</div>`;});
+    for(let i=0;i<prim;i++) h+='<div class="cal-sday vazio-mark"></div>';
+    for(let d=1;d<=total;d++){
+      const wd=new Date(this.ano,this.mes,d).getDay();
+      const isHoje=new Date(this.ano,this.mes,d).toDateString()===hoje.toDateString();
+      const isSel=d===this.diaSel;
+      const temConf=aulasDoAluno.some(a=>a.diaSemana===wd&&a.status==='confirmada');
+      const temPend=aulasDoAluno.some(a=>a.diaSemana===wd&&a.status==='pendente');
+      let cls='cal-sday clicavel';
+      if(isHoje) cls+=' hoje-mark';
+      if(isSel) cls+=' selecionado';
+      if(temConf) cls+=' tem-aula';
+      else if(temPend) cls+=' tem-pendente';
+      h+=`<div class="${cls}" onclick="calAluno.selecionarDia(${d})">${d}</div>`;
+    }
+    grid.innerHTML=h;
+  },
+
+  selecionarDia(d){
+    this.diaSel=d; this.render();
+    const nd=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    const wd=new Date(this.ano,this.mes,d).getDay();
+    document.getElementById('aluno-dia-titulo').textContent=`${nd[wd]}, ${d} de ${meses[this.mes]}`;
+    const aulas=aulasDoAluno
+      .filter(a=>a.diaSemana===wd)
+      .sort((a,b)=>a.horario.localeCompare(b.horario));
+    const el=document.getElementById('aluno-dia-aulas');
+    if(aulas.length===0){
+      el.innerHTML='<div class="empty-state">Nenhuma aula neste dia.</div>'; return;
+    }
+    const cores={'Matemática':'sa-mat','Língua Portuguesa':'sa-port','Coordenação Motora Fina':'sa-coord'};
+    el.innerHTML=aulas.map(a=>`
+      <div class="aula-dia-item">
+        <div class="aula-dia-hora">${a.horario}</div>
+        <div class="aula-dia-info">
+          <div class="aula-dia-nome">${a.materia}</div>
+          <div class="aula-dia-meta">${a.diaSemanaNome} · toda semana</div>
+        </div>
+        <span class="aula-dia-mat ${cores[a.materia]||'sa-mat'}" style="${a.status==='pendente'?'background:var(--gold-light);color:#7a5c10':''}">${a.status==='confirmada'?'✓ Conf.':'Pendente'}</span>
+      </div>`).join('');
+  }
+};
 
 // Agendamento do aluno — acumula seleções por dia da semana
 // selecoes = { 1: ['14h00'], 3: ['14h00','15h00'], ... }
