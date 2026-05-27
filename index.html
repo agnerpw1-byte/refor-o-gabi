@@ -196,6 +196,8 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 .cal-sday.vazio-mark{cursor:default;}
 .cal-sday.tem-aula{font-weight:500;background:var(--sage-light);color:var(--sage);}
 .cal-sday.tem-aula.hoje-mark{color:var(--sage);}
+.cal-sday.tem-pendente{font-weight:500;background:var(--gold-light);color:#7a5c10;}
+.cal-sday.tem-pendente.hoje-mark{color:#7a5c10;}
 
 /* painel lateral do calendário */
 .cal-side{display:flex;flex-direction:column;gap:12px;}
@@ -1232,13 +1234,15 @@ const calProf = {
       const data=new Date(this.ano,this.mes,d);
       const isHoje=data.toDateString()===hoje.toDateString();
       const isSel=d===this.diaSel;
-      // Verifica se o dia da semana deste dia tem alguma aula confirmada
       const wd2=new Date(this.ano,this.mes,d).getDay();
-      const temAula=aulasProf.some(a=>a.diaSemana===wd2);
+      const temConfirmada=aulasProf.some(a=>a.diaSemana===wd2&&a.status==='confirmada');
+      const temPendente=aulasProf.some(a=>a.diaSemana===wd2&&a.status==='pendente');
+      const temAula=temConfirmada||temPendente;
       let cls='cal-sday clicavel';
       if(isHoje) cls+=' hoje-mark';
       if(isSel) cls+=' selecionado';
-      if(temAula) cls+=' tem-aula';
+      if(temConfirmada) cls+=' tem-aula';
+      else if(temPendente) cls+=' tem-pendente';
       h+=`<div class="${cls}" onclick="calProf.selecionarDia(${d})">${d}</div>`;
     }
     grid.innerHTML=h;
