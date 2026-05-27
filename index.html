@@ -7,7 +7,7 @@
 <meta name="description" content="Aulas de reforço particular em Matemática, Língua Portuguesa e Coordenação Motora Fina. Ensino fundamental, Santa Fé, Paraná.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
 <!-- Firebase -->
@@ -81,6 +81,20 @@
   --serif:'Cormorant Garamond',serif;
   --sans:'Outfit',sans-serif;
   --tr:0.22s cubic-bezier(.4,0,.2,1);
+  /* public palette */
+  --pub-bg:#f0f7ff;
+  --pub-green:#1a9e6b;
+  --pub-green2:#15845a;
+  --pub-green-light:#d4f5e7;
+  --pub-blue:#2563d4;
+  --pub-blue-light:#dbeafe;
+  --pub-purple:#7c3aed;
+  --pub-purple-light:#ede9fe;
+  --pub-yellow:#f59e0b;
+  --pub-yellow-light:#fef3c7;
+  --pub-orange:#ea580c;
+  --pub-orange-light:#ffedd5;
+  --pub-title:'Nunito',sans-serif;
 }
 body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:900px;margin:0 auto;}
 
@@ -99,6 +113,7 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 .pg{display:none;}
 .pg.on{display:block;animation:fi .28s ease;}
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ── HERO ── */
 .hero{padding:3.5rem 1.75rem 2.5rem;display:grid;grid-template-columns:1fr 310px;gap:2.5rem;align-items:start;border-bottom:1px solid var(--paper3);}
@@ -396,106 +411,204 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
   .btn{padding:10px 18px;}
   .db-head{padding:.75rem 1rem;}
   .db-body{padding:.5rem 1rem .75rem;}
+  /* public mobile */
+  #pg-home [style*='grid-template-columns:1fr 280px']{grid-template-columns:1fr!important;}
+  #pg-home [style*='grid-template-columns:repeat(3']{grid-template-columns:1fr!important;}
+  #pg-home [style*='grid-template-columns:repeat(2']{grid-template-columns:1fr!important;}
+  #pg-trabalho [style*='grid-template-columns:repeat(3']{grid-template-columns:1fr!important;}
 }
 </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav class="nav">
-  <div class="logo" onclick="go('home')">
-    <span>Professora Gabriela</span>
-    <div class="logo-dot"></div>
-    <small>Santa Fé · PR</small>
+<nav class="nav" style="background:#fff;border-bottom:2px solid var(--pub-green-light);">
+  <div class="logo" onclick="go('home')" style="font-family:var(--pub-title);font-size:18px;font-weight:800;color:var(--pub-green);letter-spacing:-.3px;">
+    <span>✏️ Profa. Gabriela</span>
+    <small style="font-family:var(--sans);font-size:10px;font-weight:400;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;">Santa Fé · PR</small>
   </div>
   <div class="nav-r">
     <button class="nb" onclick="go('home')">Início</button>
     <button class="nb" onclick="go('trabalho')">Trabalhos</button>
-    <button class="nb" onclick="go('agendar')">Agendar aula</button>
-    <button class="nb cta" onclick="go('login')"><i class="ti ti-user"></i> Entrar</button>
+    <button class="nb" onclick="go('agendar')" style="color:var(--pub-green);font-weight:500;">Agendar aula</button>
+    <button class="nb cta" onclick="go('login')" style="background:var(--pub-green);"><i class="ti ti-user"></i> Entrar</button>
   </div>
 </nav>
 
 <!-- ══ HOME ══ -->
 <div class="pg on" id="pg-home">
-  <div class="hero">
-    <div>
-      <div class="hero-ey"><div class="ey-line"></div><span class="ey-txt">Reforço escolar · Ensino fundamental · Santa Fé, PR</span></div>
-      <h1>Aprendizado <em>personalizado</em><br>para cada aluno</h1>
-      <p class="hero-lead">Aulas individuais de Matemática, Língua Portuguesa e Coordenação Motora Fina. Metodologia lúdica — com brincadeiras, atividades práticas e muito cuidado com cada criança.</p>
-      <div class="hero-actions">
-        <button class="btn btn-dark" onclick="go('agendar')">Agendar aula gratuita</button>
-        <button class="btn btn-out" onclick="go('trabalho')">Ver trabalhos</button>
+
+  <!-- HERO -->
+  <div style="background:linear-gradient(135deg,#e8f8f1 0%,#f0f7ff 50%,#fef3c7 100%);padding:3rem 1.75rem 2.5rem;border-bottom:3px solid var(--pub-green-light);position:relative;overflow:hidden;">
+    <!-- decorative blobs -->
+    <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:var(--pub-green-light);border-radius:50%;opacity:.5;"></div>
+    <div style="position:absolute;bottom:-80px;left:-40px;width:180px;height:180px;background:var(--pub-yellow-light);border-radius:50%;opacity:.6;"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:2.5rem;align-items:center;position:relative;">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--pub-green-light);border-radius:99px;padding:5px 14px;margin-bottom:1.25rem;">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--pub-green);display:inline-block;animation:blink 2s ease-in-out infinite;"></span>
+          <span style="font-size:12px;font-weight:600;color:var(--pub-green);letter-spacing:.04em;">Vagas abertas · Santa Fé, PR</span>
+        </div>
+        <h1 style="font-family:var(--pub-title);font-size:44px;font-weight:900;line-height:1.1;color:#0f2d1f;margin-bottom:1rem;letter-spacing:-.5px;">
+          Reforço escolar<br><span style="color:var(--pub-green);">que transforma</span><br>notas e confiança 🌟
+        </h1>
+        <p style="font-size:15px;font-weight:400;line-height:1.75;color:#2d4a3a;margin-bottom:1.75rem;max-width:440px;">
+          Aulas individuais de <strong>Matemática</strong>, <strong>Português</strong> e <strong>Coordenação Motora</strong> para o ensino fundamental — com brincadeiras, jogos e muito carinho.
+        </p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button onclick="go('agendar')" style="font-family:var(--pub-title);font-size:15px;font-weight:800;padding:13px 28px;background:var(--pub-green);color:#fff;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 14px rgba(26,158,107,.35);transition:all .2s;">🎯 Agendar aula grátis</button>
+          <button onclick="go('trabalho')" style="font-family:var(--sans);font-size:14px;font-weight:500;padding:13px 24px;background:#fff;color:var(--pub-green);border:2px solid var(--pub-green);border-radius:12px;cursor:pointer;transition:all .2s;">Ver trabalhos</button>
+        </div>
       </div>
-    </div>
-    <div class="hero-panel">
-      <div class="hpc-row">
-        <div class="hpc"><div class="hpc-num">+5</div><div class="hpc-lbl">Anos de experiência</div></div>
-        <div class="hpc dark"><div class="hpc-num">3</div><div class="hpc-lbl">Especialidades</div></div>
-      </div>
-      <div class="hpc"><div class="hpc-num">100%</div><div class="hpc-lbl">Individual — sem turmas, sem pressa</div></div>
-      <div class="hpc" style="background:var(--gold-light);border-color:var(--gold2);">
-        <div style="font-size:11px;font-weight:300;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Primeira aula</div>
-        <div style="font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);">Gratuita e sem compromisso</div>
+      <!-- STATS -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:#fff;border-radius:16px;padding:1.25rem;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;background:var(--pub-green-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">🏆</div>
+          <div><div style="font-family:var(--pub-title);font-size:24px;font-weight:900;color:#0f2d1f;">+5 anos</div><div style="font-size:12px;color:#5a7a6a;font-weight:400;">de experiência</div></div>
+        </div>
+        <div style="background:#fff;border-radius:16px;padding:1.25rem;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;background:var(--pub-blue-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">👤</div>
+          <div><div style="font-family:var(--pub-title);font-size:24px;font-weight:900;color:#0f2d1f;">100%</div><div style="font-size:12px;color:#5a7a6a;font-weight:400;">atendimento individual</div></div>
+        </div>
+        <div style="background:linear-gradient(135deg,var(--pub-green),var(--pub-blue));border-radius:16px;padding:1.25rem;box-shadow:0 4px 14px rgba(26,158,107,.3);">
+          <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Primeira aula</div>
+          <div style="font-family:var(--pub-title);font-size:20px;font-weight:800;color:#fff;">✨ Gratuita!</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="sec">
-    <span class="sec-ey">Especialidades</span>
-    <h2 class="sec-t">As três matérias que a Gabriela ensina</h2>
-    <p class="sec-sub">Cada atendimento é individual, adaptado ao ritmo e às necessidades de cada aluno.</p>
-    <div class="mat-grid">
-      <div class="mat-item">
-        <div class="mat-icon">🔢</div>
-        <div class="mat-num">01 · Exatas</div>
-        <div class="mat-nome">Matemática</div>
-        <p class="mat-desc">Frações, geometria, problemas e raciocínio lógico. Atividades práticas e lúdicas para tornar a matemática concreta e divertida.</p>
-        <div class="mat-tags"><span class="mat-tag">Frações</span><span class="mat-tag">Geometria</span><span class="mat-tag">Problemas</span><span class="mat-tag">Jogos</span></div>
+  <!-- MATÉRIAS -->
+  <div style="padding:2.5rem 1.75rem;border-bottom:1px solid var(--paper3);background:#fff;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="display:inline-block;background:var(--pub-green-light);color:var(--pub-green);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:99px;margin-bottom:.75rem;">Especialidades</div>
+      <h2 style="font-family:var(--pub-title);font-size:30px;font-weight:900;color:#0f2d1f;">O que a Gabriela ensina</h2>
+      <p style="font-size:14px;color:#5a7a6a;margin-top:.5rem;">Cada aula adaptada ao ritmo e às dificuldades de cada criança</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+      <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #fed7aa;border-radius:20px;padding:1.5rem;transition:transform .2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:40px;margin-bottom:1rem;">🔢</div>
+        <div style="font-family:var(--pub-title);font-size:20px;font-weight:800;color:#7c2d12;margin-bottom:.5rem;">Matemática</div>
+        <p style="font-size:13px;color:#9a3412;line-height:1.6;">Frações, geometria, problemas e raciocínio lógico com jogos e atividades práticas.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:1rem;">
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #fed7aa;color:#9a3412;padding:2px 8px;border-radius:99px;">Frações</span>
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #fed7aa;color:#9a3412;padding:2px 8px;border-radius:99px;">Geometria</span>
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #fed7aa;color:#9a3412;padding:2px 8px;border-radius:99px;">Jogos</span>
+        </div>
       </div>
-      <div class="mat-item">
-        <div class="mat-icon">📖</div>
-        <div class="mat-num">02 · Linguagens</div>
-        <div class="mat-nome">Língua Portuguesa</div>
-        <p class="mat-desc">Leitura, interpretação, gramática e produção de texto. Aulas que estimulam o gosto pela leitura e a confiança na escrita.</p>
-        <div class="mat-tags"><span class="mat-tag">Leitura</span><span class="mat-tag">Gramática</span><span class="mat-tag">Redação</span><span class="mat-tag">Interpretação</span></div>
+      <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:20px;padding:1.5rem;transition:transform .2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:40px;margin-bottom:1rem;">📖</div>
+        <div style="font-family:var(--pub-title);font-size:20px;font-weight:800;color:#14532d;margin-bottom:.5rem;">Português</div>
+        <p style="font-size:13px;color:#166534;line-height:1.6;">Leitura, interpretação, gramática e redação com foco na confiança e no gosto pela escrita.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:1rem;">
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #86efac;color:#166534;padding:2px 8px;border-radius:99px;">Leitura</span>
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #86efac;color:#166534;padding:2px 8px;border-radius:99px;">Redação</span>
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #86efac;color:#166534;padding:2px 8px;border-radius:99px;">Gramática</span>
+        </div>
       </div>
-      <div class="mat-item">
-        <div class="mat-icon">✋</div>
-        <div class="mat-num">03 · Desenvolvimento</div>
-        <div class="mat-nome">Coordenação Motora Fina</div>
-        <p class="mat-desc">Atividades manuais, recorte, colagem, grafismo e escrita. Desenvolvimento essencial para a aprendizagem escolar com muita criatividade.</p>
-        <div class="mat-tags"><span class="mat-tag">Grafismo</span><span class="mat-tag">Recorte</span><span class="mat-tag">Escrita</span><span class="mat-tag">Criatividade</span></div>
+      <div style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border:2px solid #c4b5fd;border-radius:20px;padding:1.5rem;transition:transform .2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:40px;margin-bottom:1rem;">✋</div>
+        <div style="font-family:var(--pub-title);font-size:20px;font-weight:800;color:#4c1d95;margin-bottom:.5rem;">Coord. Motora</div>
+        <p style="font-size:13px;color:#5b21b6;line-height:1.6;">Grafismo, recorte, colagem e escrita para desenvolver coordenação e criatividade.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:1rem;">
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #c4b5fd;color:#5b21b6;padding:2px 8px;border-radius:99px;">Grafismo</span>
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #c4b5fd;color:#5b21b6;padding:2px 8px;border-radius:99px;">Recorte</span>
+          <span style="font-size:10px;font-weight:600;background:#fff;border:1px solid #c4b5fd;color:#5b21b6;padding:2px 8px;border-radius:99px;">Escrita</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="sec" style="border-bottom:none;">
-    <span class="sec-ey">Como funciona</span>
-    <h2 class="sec-t">Lúdico, prático e personalizado</h2>
-    <p class="sec-sub">Brincadeiras e atividades práticas fazem parte do método — não são extra.</p>
-    <div class="metodo-list">
-      <div class="metodo-item"><div class="metodo-n">01</div><div class="metodo-body"><h4>Diagnóstico individual</h4><p>Identifico onde cada aluno tem dificuldade antes de começar — sem perder tempo com o que ele já sabe.</p></div></div>
-      <div class="metodo-item"><div class="metodo-n">02</div><div class="metodo-body"><h4>Aulas com brincadeiras e atividades práticas</h4><p>Uso jogos, dinâmicas e materiais concretos. O lúdico é parte central do aprendizado, não um bônus.</p></div></div>
-      <div class="metodo-item"><div class="metodo-n">03</div><div class="metodo-body"><h4>Ritmo do aluno, não do conteúdo</h4><p>Cada criança tem seu tempo. O plano de aula é montado para ela — não para uma turma.</p></div></div>
-      <div class="metodo-item"><div class="metodo-n">04</div><div class="metodo-body"><h4>Retorno contínuo à família</h4><p>Comunico a evolução do aluno regularmente — para que pais e responsáveis acompanhem de perto.</p></div></div>
+  <!-- COMO FUNCIONA -->
+  <div style="padding:2.5rem 1.75rem;background:linear-gradient(180deg,#f0f7ff,#fff);border-bottom:none;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="display:inline-block;background:var(--pub-blue-light);color:var(--pub-blue);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:99px;margin-bottom:.75rem;">Método</div>
+      <h2 style="font-family:var(--pub-title);font-size:30px;font-weight:900;color:#0f2d1f;">Como funcionam as aulas</h2>
+      <p style="font-size:14px;color:#5a7a6a;margin-top:.5rem;">Lúdico, prático e 100% personalizado para cada criança</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+      <div style="background:#fff;border:2px solid #e0f2fe;border-radius:16px;padding:1.25rem;display:flex;gap:14px;align-items:flex-start;">
+        <div style="min-width:42px;height:42px;background:linear-gradient(135deg,var(--pub-green),var(--pub-blue));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">🔍</div>
+        <div><div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#0f2d1f;margin-bottom:4px;">Diagnóstico individual</div><p style="font-size:13px;color:#5a7a6a;line-height:1.6;">Identifico onde o aluno tem dificuldade antes de começar.</p></div>
+      </div>
+      <div style="background:#fff;border:2px solid #fce7f3;border-radius:16px;padding:1.25rem;display:flex;gap:14px;align-items:flex-start;">
+        <div style="min-width:42px;height:42px;background:linear-gradient(135deg,#ec4899,#f97316);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">🎮</div>
+        <div><div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#0f2d1f;margin-bottom:4px;">Brincadeiras e jogos</div><p style="font-size:13px;color:#5a7a6a;line-height:1.6;">O lúdico é parte central — não um bônus.</p></div>
+      </div>
+      <div style="background:#fff;border:2px solid #fef9c3;border-radius:16px;padding:1.25rem;display:flex;gap:14px;align-items:flex-start;">
+        <div style="min-width:42px;height:42px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">⏱️</div>
+        <div><div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#0f2d1f;margin-bottom:4px;">Ritmo do aluno</div><p style="font-size:13px;color:#5a7a6a;line-height:1.6;">Cada criança aprende no seu tempo. Sem pressão.</p></div>
+      </div>
+      <div style="background:#fff;border:2px solid #dcfce7;border-radius:16px;padding:1.25rem;display:flex;gap:14px;align-items:flex-start;">
+        <div style="min-width:42px;height:42px;background:linear-gradient(135deg,var(--pub-green),#0d9488);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">👨‍👩‍👧</div>
+        <div><div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#0f2d1f;margin-bottom:4px;">Retorno à família</div><p style="font-size:13px;color:#5a7a6a;line-height:1.6;">Pais informados sobre a evolução do filho.</p></div>
+      </div>
+    </div>
+
+    <!-- CTA FINAL -->
+    <div style="margin-top:2rem;background:linear-gradient(135deg,var(--pub-green),var(--pub-blue));border-radius:20px;padding:2rem;text-align:center;">
+      <div style="font-family:var(--pub-title);font-size:26px;font-weight:900;color:#fff;margin-bottom:.5rem;">Pronto para começar? 🚀</div>
+      <p style="font-size:14px;color:rgba(255,255,255,.8);margin-bottom:1.25rem;">A primeira aula é gratuita e sem compromisso.</p>
+      <button onclick="go('agendar')" style="font-family:var(--pub-title);font-size:15px;font-weight:800;padding:13px 32px;background:#fff;color:var(--pub-green);border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:all .2s;">🎯 Agendar aula gratuita</button>
     </div>
   </div>
 </div>
 
 <!-- ══ TRABALHOS ══ -->
 <div class="pg" id="pg-trabalho">
-  <div class="sec" style="border-bottom:none;">
-    <span class="sec-ey">Portfólio</span>
-    <h2 class="sec-t">Trabalhos e materiais</h2>
-    <p class="sec-sub">Exemplos de planos de aula, atividades lúdicas e materiais usados com os alunos.</p>
-    <div class="trab-grid">
-      <div class="trab-card"><div class="trab-mat">Matemática · 6.º ano</div><div class="trab-t">Frações com material concreto</div><p class="trab-d">Aula usando partes de laranja e pizza de papel para ensinar frações de forma visual e tátil.</p><span class="trab-tag">Atividade lúdica</span></div>
-      <div class="trab-card"><div class="trab-mat">Língua Portuguesa · 5.º ano</div><div class="trab-t">Produção de texto com imagens</div><p class="trab-d">Sequência de imagens para estimular a narrativa escrita — do rascunho à versão final revisada.</p><span class="trab-tag">Plano de aula</span></div>
-      <div class="trab-card"><div class="trab-mat">Coord. Motora · 3.º ano</div><div class="trab-t">Labirinto e grafismo livre</div><p class="trab-d">Atividade de labirinto progressivo e grafismo ornamental para desenvolver controle do lápis.</p><span class="trab-tag">Atividade prática</span></div>
-      <div class="trab-card"><div class="trab-mat">Matemática · 4.º ano</div><div class="trab-t">Tabuada com jogo de cartas</div><p class="trab-d">Jogo de memória com operações matemáticas para fixar a tabuada de forma divertida.</p><span class="trab-tag">Jogo pedagógico</span></div>
-      <div class="trab-card"><div class="trab-mat">Língua Portuguesa · 7.º ano</div><div class="trab-t">Análise de manchetes de jornal</div><p class="trab-d">Leitura crítica de manchetes para trabalhar interpretação, variação linguística e argumentação.</p><span class="trab-tag">Plano de aula</span></div>
-      <div class="trab-card"><div class="trab-mat">Coord. Motora · 2.º ano</div><div class="trab-t">Recorte e colagem temática</div><p class="trab-d">Atividade de recorte com tesoura de ponta arredondada e colagem para desenvolver precisão.</p><span class="trab-tag">Atividade manual</span></div>
+  <div style="padding:2.5rem 1.75rem;background:#fff;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="display:inline-block;background:var(--pub-purple-light);color:var(--pub-purple);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:99px;margin-bottom:.75rem;">Portfólio</div>
+      <h2 style="font-family:var(--pub-title);font-size:30px;font-weight:900;color:#0f2d1f;">Trabalhos e atividades</h2>
+      <p style="font-size:14px;color:#5a7a6a;margin-top:.5rem;">Exemplos reais de planos de aula, jogos e materiais usados com os alunos</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+      <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #fed7aa;border-radius:16px;padding:1.25rem;">
+        <div style="font-size:28px;margin-bottom:.75rem;">🍕</div>
+        <div style="font-size:11px;font-weight:700;color:#9a3412;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;">Matemática · 6.º ano</div>
+        <div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#7c2d12;margin-bottom:.5rem;">Frações com material concreto</div>
+        <p style="font-size:12px;color:#9a3412;line-height:1.6;">Aula usando partes de laranja e pizza de papel — visual e tátil.</p>
+        <span style="display:inline-block;margin-top:.75rem;font-size:10px;font-weight:700;background:#fff;border:1px solid #fed7aa;color:#9a3412;padding:2px 10px;border-radius:99px;">🎮 Atividade lúdica</span>
+      </div>
+      <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:16px;padding:1.25rem;">
+        <div style="font-size:28px;margin-bottom:.75rem;">🖼️</div>
+        <div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;">Português · 5.º ano</div>
+        <div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#14532d;margin-bottom:.5rem;">Produção de texto com imagens</div>
+        <p style="font-size:12px;color:#166534;line-height:1.6;">Sequência de imagens para estimular a narrativa escrita.</p>
+        <span style="display:inline-block;margin-top:.75rem;font-size:10px;font-weight:700;background:#fff;border:1px solid #86efac;color:#166534;padding:2px 10px;border-radius:99px;">📋 Plano de aula</span>
+      </div>
+      <div style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border:2px solid #c4b5fd;border-radius:16px;padding:1.25rem;">
+        <div style="font-size:28px;margin-bottom:.75rem;">🌀</div>
+        <div style="font-size:11px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;">Coord. Motora · 3.º ano</div>
+        <div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#4c1d95;margin-bottom:.5rem;">Labirinto e grafismo livre</div>
+        <p style="font-size:12px;color:#5b21b6;line-height:1.6;">Labirinto progressivo para desenvolver controle do lápis.</p>
+        <span style="display:inline-block;margin-top:.75rem;font-size:10px;font-weight:700;background:#fff;border:1px solid #c4b5fd;color:#5b21b6;padding:2px 10px;border-radius:99px;">✏️ Atividade prática</span>
+      </div>
+      <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #fed7aa;border-radius:16px;padding:1.25rem;">
+        <div style="font-size:28px;margin-bottom:.75rem;">🃏</div>
+        <div style="font-size:11px;font-weight:700;color:#9a3412;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;">Matemática · 4.º ano</div>
+        <div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#7c2d12;margin-bottom:.5rem;">Tabuada com jogo de cartas</div>
+        <p style="font-size:12px;color:#9a3412;line-height:1.6;">Jogo de memória para fixar a tabuada de forma divertida.</p>
+        <span style="display:inline-block;margin-top:.75rem;font-size:10px;font-weight:700;background:#fff;border:1px solid #fed7aa;color:#9a3412;padding:2px 10px;border-radius:99px;">🎲 Jogo pedagógico</span>
+      </div>
+      <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:16px;padding:1.25rem;">
+        <div style="font-size:28px;margin-bottom:.75rem;">📰</div>
+        <div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;">Português · 7.º ano</div>
+        <div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#14532d;margin-bottom:.5rem;">Análise de manchetes</div>
+        <p style="font-size:12px;color:#166534;line-height:1.6;">Leitura crítica para trabalhar interpretação e argumentação.</p>
+        <span style="display:inline-block;margin-top:.75rem;font-size:10px;font-weight:700;background:#fff;border:1px solid #86efac;color:#166534;padding:2px 10px;border-radius:99px;">📋 Plano de aula</span>
+      </div>
+      <div style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border:2px solid #c4b5fd;border-radius:16px;padding:1.25rem;">
+        <div style="font-size:28px;margin-bottom:.75rem;">✂️</div>
+        <div style="font-size:11px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;">Coord. Motora · 2.º ano</div>
+        <div style="font-family:var(--pub-title);font-size:16px;font-weight:800;color:#4c1d95;margin-bottom:.5rem;">Recorte e colagem temática</div>
+        <p style="font-size:12px;color:#5b21b6;line-height:1.6;">Recorte e colagem para desenvolver precisão e criatividade.</p>
+        <span style="display:inline-block;margin-top:.75rem;font-size:10px;font-weight:700;background:#fff;border:1px solid #c4b5fd;color:#5b21b6;padding:2px 10px;border-radius:99px;">🖐️ Atividade manual</span>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:2rem;">
+      <button onclick="go('agendar')" style="font-family:var(--pub-title);font-size:15px;font-weight:800;padding:13px 32px;background:var(--pub-green);color:#fff;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 14px rgba(26,158,107,.3);">🎯 Quero agendar uma aula</button>
     </div>
   </div>
 </div>
@@ -855,9 +968,9 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
   </div>
 </div>
 
-<footer class="footer">
-  <div class="footer-logo">Professora Gabriela</div>
-  <div class="footer-info">Reforço escolar particular<br>Santa Fé, Paraná</div>
+<footer style="padding:1.5rem 1.75rem;background:linear-gradient(135deg,#0f2d1f,#1a4a32);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+  <div style="font-family:var(--pub-title);font-size:18px;font-weight:800;color:#fff;">✏️ Profa. Gabriela</div>
+  <div style="font-size:12px;color:rgba(255,255,255,.5);text-align:right;">Reforço escolar particular<br>Santa Fé, Paraná</div>
 </footer>
 
 <script>
