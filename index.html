@@ -898,15 +898,16 @@ function selecionarHor(h){
   r.innerHTML=`<strong>Horário fixo escolhido</strong>${diaSemNome} · ${h} toda semana`;
   r.style.display='block';
   document.getElementById('ag-form').style.display='block';
-  // Verifica se já está logado com Google
-  const user=window._fb.auth.currentUser;
-  if(user && user.email !== window._fb.EMAIL_PROF){
+  // Verifica se já está logado com Google (providerData garante que é Google)
+  const user=window._fb?.auth?.currentUser;
+  const isGoogle=user && user.providerData.some(p=>p.providerId==='google.com');
+  if(isGoogle){
     document.getElementById('ag-google-aviso').style.display='none';
     const logadoEl=document.getElementById('ag-usuario-logado');
     logadoEl.style.display='flex';
     document.getElementById('ag-usuario-nome').textContent=
       (user.displayName||user.email)+' — conta verificada ✓';
-  } else if(!user){
+  } else {
     document.getElementById('ag-google-aviso').style.display='block';
     document.getElementById('ag-usuario-logado').style.display='none';
   }
@@ -925,11 +926,13 @@ async function enviarSolicitacao(){
     erro.style.display='block'; ok.style.display='none'; return;
   }
 
-  // Verifica se está logado com Google
+  // Verifica se está logado com Google especificamente
   const {auth,db,collection,addDoc,serverTimestamp}=window._fb;
   const user=auth.currentUser;
-  if(!user){
+  const isGoogle=user && user.providerData.some(p=>p.providerId==='google.com');
+  if(!isGoogle){
     document.getElementById('ag-google-aviso').style.display='block';
+    document.getElementById('ag-usuario-logado').style.display='none';
     erro.style.display='none'; return;
   }
 
