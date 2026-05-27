@@ -841,8 +841,8 @@ async function selecionarDiaSemana(num, nome){
   document.getElementById('pub-horas-carregando').style.display='none';
   document.getElementById('pub-horas-wrap').style.display='block';
 
-  const horasManha=['08h00','08h30','09h00','09h30','10h00'];
-  const horasTarde=['14h00','14h30','15h00','15h30','16h00','16h30','17h00'];
+  const horasManha=['08h00','09h00','10h00'];
+  const horasTarde=['14h00','15h00','16h00','17h00'];
 
   const btnHora=(h)=>{
     const isOcup=ocupados.includes(h);
@@ -996,8 +996,8 @@ const agAluno = {
     document.getElementById('ag-aluno-carregando').style.display='none';
     document.getElementById('ag-aluno-horas').style.display='block';
 
-    const horasManha=['08h00','08h30','09h00','09h30','10h00'];
-    const horasTarde=['14h00','14h30','15h00','15h30','16h00','16h30','17h00'];
+    const horasManha=['08h00','09h00','10h00'];
+    const horasTarde=['14h00','15h00','16h00','17h00'];
 
     const btnHora=(h)=>{
       const isOcup=ocupados.includes(h);
