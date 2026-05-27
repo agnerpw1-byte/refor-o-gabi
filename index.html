@@ -45,9 +45,11 @@
   onAuthStateChanged(auth, user => {
     if (user) {
       if (user.email === EMAIL_PROF) {
-        go("prof"); carregarAgenda(); carregarSolicitacoes();
+        go("prof");
+        setTimeout(() => { carregarAgenda(); carregarSolicitacoes(); }, 100);
       } else {
-        go("aluno"); carregarAulasAluno(user.uid); carregarMateriaisAluno(user.uid);
+        go("aluno");
+        setTimeout(() => { carregarAulasAluno(user.uid); carregarMateriaisAluno(user.uid); }, 100);
       }
     }
   });
@@ -880,10 +882,12 @@ async function logout(){
 
 // ══ ÁREA DO ALUNO ══
 function trocarTabAluno(t,el){
-  document.querySelectorAll('#pg-aluno .ptab').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('#pg-aluno .tab-pane').forEach(p=>p.classList.remove('on'));
+  const panel=document.getElementById('pg-aluno');
+  panel.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
+  panel.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('atab-'+t).classList.add('on');
+  if(t==='calendario') setTimeout(()=>calAluno.render(),50);
 }
 
 // Cache de aulas do aluno para o calendário
@@ -920,6 +924,7 @@ const calAluno = {
   render(){
     const titulo=document.getElementById('cal-aluno-titulo');
     const grid=document.getElementById('cal-aluno-grid');
+    if(!titulo||!grid){ setTimeout(()=>this.render(),80); return; }
     titulo.textContent=meses[this.mes]+' '+this.ano;
     const hoje=new Date();
     const amanha=new Date(hoje); amanha.setDate(hoje.getDate()+1);
@@ -1264,10 +1269,13 @@ async function carregarListaAlunos(){
 
 // ══ TABS ══
 function trocarTab(t,el){
-  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
+  const panel=document.getElementById('pg-prof');
+  panel.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
+  panel.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('tab-'+t).classList.add('on');
+  // Render calendar if switching to agenda
+  if(t==='agenda') setTimeout(()=>calProf.render(),50);
 }
 
 // ══ IA ══
