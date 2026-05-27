@@ -191,9 +191,8 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);max-width:
 .cal-sday.hoje-mark{color:var(--gold);font-weight:500;}
 .cal-sday.passado-mark{color:var(--paper3);cursor:default;}
 .cal-sday.vazio-mark{cursor:default;}
-.cal-sday.tem-aula{font-weight:500;}
-.cal-sday.tem-aula::after{content:'';display:block;width:4px;height:4px;border-radius:50%;background:var(--sage);margin:1px auto 0;}
-.cal-sday.lotado::after{background:var(--red);}
+.cal-sday.tem-aula{font-weight:500;background:var(--sage-light);color:var(--sage);}
+.cal-sday.tem-aula.hoje-mark{color:var(--sage);}
 
 /* painel lateral do calendário */
 .cal-side{display:flex;flex-direction:column;gap:12px;}
