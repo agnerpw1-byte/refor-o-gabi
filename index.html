@@ -1097,10 +1097,15 @@ let aulasProf=[];
 async function carregarAgenda(){
   const {db,collection,query,where,getDocs}=window._fb;
   try{
-    const q=query(collection(db,'solicitacoes'),where('status','==','confirmada'));
-    const snap=await getDocs(q);
+    // Carrega confirmadas E pendentes para mostrar no calendário
+    const snap=await getDocs(collection(db,'solicitacoes'));
     aulasProf=[];
-    snap.forEach(d=>{ aulasProf.push({id:d.id,...d.data()}); });
+    snap.forEach(d=>{
+      const data=d.data();
+      if(data.status==='confirmada'||data.status==='pendente'){
+        aulasProf.push({id:d.id,...data});
+      }
+    });
   }catch(e){ console.error('carregarAgenda erro:',e); }
   calProf.render();
   carregarListaAlunos();
@@ -1136,7 +1141,9 @@ const calProf = {
       const data=new Date(this.ano,this.mes,d);
       const isHoje=data.toDateString()===hoje.toDateString();
       const isSel=d===this.diaSel;
-      const temAula=aulasProf.some(a=>a.dia===d&&a.mes===this.mes&&a.ano===this.ano);
+      // Verifica se o dia da semana deste dia tem alguma aula confirmada
+      const wd2=new Date(this.ano,this.mes,d).getDay();
+      const temAula=aulasProf.some(a=>a.diaSemana===wd2);
       let cls='cal-sday clicavel';
       if(isHoje) cls+=' hoje-mark';
       if(isSel) cls+=' selecionado';
@@ -1151,13 +1158,34 @@ const calProf = {
     const nd=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
     const wd=new Date(this.ano,this.mes,d).getDay();
     document.getElementById('prof-dia-titulo').textContent=`${nd[wd]}, ${d} de ${meses[this.mes]}`;
-    const aulas=aulasProf.filter(a=>a.dia===d&&a.mes===this.mes&&a.ano===this.ano)
+
+    // Filtra por dia da semana (aulas semanais fixas)
+    const aulas=aulasProf
+      .filter(a=>a.diaSemana===wd && a.status==='confirmada')
       .sort((a,b)=>a.horario.localeCompare(b.horario));
+
     const cores={'Matemática':'sa-mat','Língua Portuguesa':'sa-port','Coordenação Motora Fina':'sa-coord'};
     const el=document.getElementById('prof-dia-aulas');
+
     if(aulas.length===0){
-      el.innerHTML='<div class="empty-state">Nenhuma aula neste dia.</div>'; return;
+      // Verifica se há pendentes nesse dia
+      const pendentes=aulasProf.filter(a=>a.diaSemana===wd && a.status==='pendente');
+      if(pendentes.length>0){
+        el.innerHTML=pendentes.map(a=>`
+          <div class="aula-dia-item" style="opacity:.6;">
+            <div class="aula-dia-hora">${a.horario}</div>
+            <div class="aula-dia-info">
+              <div class="aula-dia-nome">${a.nome}</div>
+              <div class="aula-dia-meta">${a.serie} · ${a.materia}</div>
+            </div>
+            <span style="font-size:10px;background:var(--gold-light);color:#7a5c10;padding:2px 7px;border-radius:2px;">Pendente</span>
+          </div>`).join('');
+      } else {
+        el.innerHTML='<div class="empty-state">Nenhuma aula neste dia.</div>';
+      }
+      return;
     }
+
     el.innerHTML=aulas.map(a=>`
       <div class="aula-dia-item">
         <div class="aula-dia-hora">${a.horario}</div>
