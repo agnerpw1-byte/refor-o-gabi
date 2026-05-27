@@ -15,7 +15,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
+  import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc,
     query, orderBy, where, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -38,7 +38,7 @@
 
   // Expõe para o código global
   window._fb = { auth, db, signInWithEmailAndPassword, signOut,
-    onAuthStateChanged, collection, addDoc, getDocs, doc, updateDoc,
+    onAuthStateChanged, collection, addDoc, getDocs, getDoc, doc, updateDoc,
     query, orderBy, where, serverTimestamp, EMAIL_PROF };
 
   // Observa autenticação ao carregar
@@ -913,24 +913,54 @@ async function carregarSolicitacoes(){
   }catch(e){el.innerHTML='<div class="empty-state" style="padding:1rem;">Erro ao carregar solicitações.</div>';}
 }
 
-async function responderSol(id,status){
-  const {db,doc,updateDoc,addDoc,collection,serverTimestamp}=window._fb;
+async function responderSol(id, status){
+  const {db, doc, updateDoc, addDoc, collection, getDoc, serverTimestamp} = window._fb;
   try{
-    await updateDoc(doc(db,'solicitacoes',id),{status});
-    const el=document.getElementById('sol-'+id);
-    if(status==='confirmada'){
-      el.querySelector('.sol-btns').innerHTML='<div style="margin-top:6px;font-size:12px;color:var(--sage);"><i class="ti ti-check"></i> Confirmada</div>';
-      el.style.opacity='.5';
-    }else{
-      el.style.transition='all .3s';el.style.opacity='0';
-      setTimeout(()=>el.style.display='none',300);
+    // Busca os dados da solicitação
+    const solSnap = await getDoc(doc(db,'solicitacoes',id));
+    const s = solSnap.data();
+
+    // Atualiza status da solicitação
+    await updateDoc(doc(db,'solicitacoes',id), {status});
+
+    if(status === 'confirmada'){
+      // Cria automaticamente o aluno na coleção alunos
+      await addDoc(collection(db,'alunos'), {
+        nome:          s.nome,
+        serie:         s.serie,
+        materia:       s.materia,
+        diaSemanaNome: s.diaSemanaNome || '',
+        diaSemana:     s.diaSemana || null,
+        horario:       s.horario,
+        whatsapp:      s.whatsapp,
+        status:        'ativo',
+        alunoUid:      '',
+        criadoEm:      serverTimestamp()
+      });
+
+      const el = document.getElementById('sol-'+id);
+      el.querySelector('.sol-btns').innerHTML = '<div style="margin-top:6px;font-size:12px;color:var(--sage);"><i class="ti ti-check"></i> Confirmada — aluno cadastrado</div>';
+      el.style.opacity = '.5';
+
+      // Atualiza a aba Alunos em background
+      carregarListaAlunos();
+    } else {
+      const el = document.getElementById('sol-'+id);
+      el.style.transition = 'all .3s';
+      el.style.opacity = '0';
+      setTimeout(()=>el.style.display='none', 300);
     }
+
     // Atualiza badges
-    const b1=document.getElementById('badge-solicitacoes');
-    const b2=document.getElementById('badge-sol2');
-    b1.textContent=Math.max(0,(parseInt(b1.textContent)||0)-1);
-    b2.textContent=b1.textContent;
-  }catch(e){alert('Erro ao atualizar solicitação.');}
+    const b1 = document.getElementById('badge-solicitacoes');
+    const b2 = document.getElementById('badge-sol2');
+    b1.textContent = Math.max(0,(parseInt(b1.textContent)||0)-1);
+    b2.textContent = b1.textContent;
+
+  }catch(e){
+    console.error(e);
+    alert('Erro ao processar solicitação. Tente novamente.');
+  }
 }
 
 async function editarHorario(alunoId, diaAtual, horAtual){
