@@ -14,7 +14,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-    GoogleAuthProvider, signInWithPopup }
+    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc,
     query, orderBy, where, serverTimestamp, onSnapshot }
@@ -40,8 +40,12 @@
   // Expõe para o código global
   window._fb = { auth, db, signInWithEmailAndPassword, signOut,
     onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
+    signInWithRedirect, getRedirectResult,
     collection, addDoc, getDocs, getDoc, doc, updateDoc,
     query, orderBy, where, serverTimestamp, onSnapshot, EMAIL_PROF };
+
+  // Captura resultado do redirect (mobile Google login)
+  getRedirectResult(auth).catch(e => console.error('redirect result:', e));
 
   // Observa autenticação ao carregar
   onAuthStateChanged(auth, user => {
@@ -1111,30 +1115,42 @@ function backLogin(){
 async function loginGoogle(){
   const erro=document.getElementById('aluno-erro');
   try{
-    const {auth,GoogleAuthProvider,signInWithPopup}=window._fb;
+    const {auth,GoogleAuthProvider,signInWithPopup,signInWithRedirect}=window._fb;
     const provider=new GoogleAuthProvider();
-    await signInWithPopup(auth,provider);
-    // onAuthStateChanged cuida do redirecionamento
+    const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(isMobile){
+      await signInWithRedirect(auth,provider);
+    } else {
+      await signInWithPopup(auth,provider);
+    }
   }catch(e){
     if(e.code!=='auth/popup-closed-by-user'){
-      erro.textContent='Erro ao entrar com Google. Tente novamente.';
-      erro.style.display='block';
+      const erro=document.getElementById('aluno-erro');
+      if(erro){ erro.textContent='Erro ao entrar com Google. Tente novamente.'; erro.style.display='block'; }
     }
   }
 }
 
 async function loginGoogleAgendamento(){
   try{
-    const {auth,GoogleAuthProvider,signInWithPopup}=window._fb;
+    const {auth,GoogleAuthProvider,signInWithPopup,signInWithRedirect}=window._fb;
     const provider=new GoogleAuthProvider();
-    const result=await signInWithPopup(auth,provider);
-    const user=result.user;
-    // Após login, atualiza o estado do agendamento
-    document.getElementById('ag-google-aviso').style.display='none';
-    const logadoEl=document.getElementById('ag-usuario-logado');
-    logadoEl.style.display='flex';
-    document.getElementById('ag-usuario-nome').textContent=
-      (user.displayName||user.email)+' — conta verificada ✓';
+    const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(isMobile){
+      // Salva intenção de agendamento para restaurar após redirect
+      sessionStorage.setItem('ag_redirect','1');
+      sessionStorage.setItem('ag_dia', diaSemSel||'');
+      sessionStorage.setItem('ag_hor', horSel||'');
+      await signInWithRedirect(auth,provider);
+    } else {
+      const result=await signInWithPopup(auth,provider);
+      const user=result.user;
+      document.getElementById('ag-google-aviso').style.display='none';
+      const logadoEl=document.getElementById('ag-usuario-logado');
+      logadoEl.style.display='flex';
+      document.getElementById('ag-usuario-nome').textContent=
+        (user.displayName||user.email)+' — conta verificada ✓';
+    }
   }catch(e){
     if(e.code!=='auth/popup-closed-by-user') alert('Erro ao entrar com Google.');
   }
@@ -1154,9 +1170,13 @@ async function loginAluno(){
 }
 
 async function loginProf(){
-  const email=document.getElementById('pr-u').value;
+  const email=document.getElementById('pr-u').value.trim();
   const senha=document.getElementById('pr-p').value;
   const erro=document.getElementById('prof-erro');
+  if(!email||!senha){
+    erro.textContent='Preencha e-mail e senha.';
+    erro.style.display='block'; return;
+  }
   try{
     const {auth,signInWithEmailAndPassword}=window._fb;
     await signInWithEmailAndPassword(auth,email,senha);
